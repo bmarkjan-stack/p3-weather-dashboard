@@ -1,0 +1,453 @@
+/* ================================
+   Reset
+================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    min-height: 100vh;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #eef6ff 0%, #f8fbff 50%, #eaf4ff 100%);
+    color: #172033;
+    line-height: 1.6;
+}
+
+/* ================================
+   General
+================================ */
+
+.container {
+    width: min(1100px, 92%);
+    margin: 0 auto;
+    padding: 50px 0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ================================
+   Header
+================================ */
+
+.header {
+    margin-bottom: 35px;
+}
+
+.eyebrow,
+.location-label {
+    color: #4f7cff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.header h1 {
+    margin-top: 5px;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+}
+
+.subtitle {
+    margin-top: 12px;
+    color: #697386;
+    font-size: 1rem;
+}
+
+/* ================================
+   Search
+================================ */
+
+.search-section {
+    margin-bottom: 30px;
+}
+
+.search-form {
+    display: flex;
+    gap: 12px;
+}
+
+.search-form input {
+    flex: 1;
+    min-width: 0;
+    padding: 16px 18px;
+    border: 1px solid #d7dfeb;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #172033;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-form input:focus {
+    border-color: #4f7cff;
+    box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.15);
+}
+
+.search-form button {
+    padding: 0 25px;
+    border: none;
+    border-radius: 12px;
+    background: #4f7cff;
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.search-form button:hover {
+    background: #3d68df;
+    transform: translateY(-1px);
+}
+
+.search-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error-message {
+    margin-top: 12px;
+    color: #d14343;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* ================================
+   Recently Searched
+================================ */
+
+.recent-section {
+    margin-bottom: 35px;
+}
+
+.section-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 15px;
+}
+
+.section-heading h2 {
+    font-size: 1.25rem;
+}
+
+.clear-button {
+    border: none;
+    background: transparent;
+    color: #4f7cff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.clear-button:hover {
+    text-decoration: underline;
+}
+
+.recent-cities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recent-city {
+    padding: 9px 15px;
+    border: 1px solid #dce4ef;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #354052;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.recent-city:hover {
+    background: #edf3ff;
+    transform: translateY(-1px);
+}
+
+.empty-message {
+    color: #8993a5;
+    font-size: 0.9rem;
+}
+
+/* ================================
+   Loading
+================================ */
+
+.loading {
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    color: #697386;
+}
+
+.spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #dce5f7;
+    border-top-color: #4f7cff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ================================
+   Weather Dashboard
+================================ */
+
+.weather-dashboard {
+    display: grid;
+    gap: 35px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(215, 223, 235, 0.8);
+    border-radius: 24px;
+    box-shadow: 0 15px 40px rgba(43, 65, 100, 0.08);
+}
+
+/* ================================
+   Current Weather
+================================ */
+
+.current-weather {
+    padding: clamp(25px, 5vw, 45px);
+}
+
+.current-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.current-header h2 {
+    margin-top: 5px;
+    font-size: clamp(1.5rem, 4vw, 2.3rem);
+}
+
+.date {
+    margin-top: 5px;
+    color: #8993a5;
+}
+
+.weather-icon {
+    font-size: clamp(3rem, 8vw, 5rem);
+}
+
+.temperature-section {
+    display: flex;
+    align-items: flex-start;
+    margin-top: 25px;
+}
+
+#current-temperature {
+    font-size: clamp(5rem, 14vw, 8rem);
+    font-weight: 800;
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+}
+
+.temperature-unit {
+    margin-top: 5px;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+}
+
+.weather-condition {
+    margin-top: 15px;
+    color: #4f5b70;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.weather-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    margin-top: 35px;
+}
+
+.detail {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 16px;
+    background: #f5f8fd;
+}
+
+.detail-icon {
+    font-size: 1.6rem;
+}
+
+.detail-label {
+    color: #8993a5;
+    font-size: 0.8rem;
+}
+
+.detail-value {
+    margin-top: 2px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+/* ================================
+   Forecast
+================================ */
+
+.forecast-section h2 {
+    margin-top: 3px;
+}
+
+.forecast-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.forecast-card {
+    padding: 22px 15px;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #e0e6ef;
+    border-radius: 18px;
+    box-shadow: 0 8px 25px rgba(43, 65, 100, 0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.forecast-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(43, 65, 100, 0.1);
+}
+
+.forecast-day {
+    color: #536074;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.forecast-icon {
+    margin: 12px 0;
+    font-size: 2.4rem;
+}
+
+.forecast-condition {
+    min-height: 44px;
+    color: #7c8799;
+    font-size: 0.78rem;
+}
+
+.forecast-temperature {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.forecast-high {
+    font-weight: 800;
+}
+
+.forecast-low {
+    color: #8993a5;
+}
+
+/* ================================
+   Footer
+================================ */
+
+footer {
+    padding: 25px;
+    text-align: center;
+    color: #8993a5;
+    font-size: 0.8rem;
+}
+
+/* ================================
+   Responsive Design
+================================ */
+
+@media (max-width: 800px) {
+    .forecast-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        padding: 30px 0;
+    }
+    .search-form {
+        flex-direction: column;
+    }
+    .search-form button {
+        padding: 14px;
+    }
+    .current-header {
+        align-items: center;
+    }
+    .weather-icon {
+        font-size: 3rem;
+    }
+    .weather-details {
+        grid-template-columns: 1fr;
+    }
+    .forecast-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 400px) {
+    .forecast-grid {
+        grid-template-columns: 1fr;
+    }
+    .forecast-card {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        text-align: left;
+        gap: 10px;
+    }
+
+    .forecast-icon {
+        margin: 0;
+    }
+
+    .forecast-temperature {
+        justify-content: flex-end;
+        margin-top: 0;
+    }
+}
