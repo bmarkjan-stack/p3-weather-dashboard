@@ -234,17 +234,15 @@ The forecast layout automatically changes depending on the available screen widt
 Check out my portfolio browser for the application screenshots!
 
 ```text
-https://bmarkjan-stack.github.io
+URL: https://bmarkjan-stack.github.io
 ```
 
 ## Desktop
 
-```text
 ![Weather Dashboard Desktop Screenshot 1](images/p3-1.png)
-![Weather Dashboard Desktop Screenshot 1](images/p3-2.png)
-![Weather Dashboard Desktop Screenshot 1](images/p3-3.png)
-![Weather Dashboard Desktop Screenshot 1](images/p3-4.png)
-```
+![Weather Dashboard Desktop Screenshot 2](images/p3-2.png)
+![Weather Dashboard Desktop Screenshot 3](images/p3-3.png)
+![Weather Dashboard Desktop Screenshot 4](images/p3-4.png)
 
 ---
 
