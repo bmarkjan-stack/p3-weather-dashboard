@@ -231,30 +231,19 @@ The forecast layout automatically changes depending on the available screen widt
 
 ## Demo
 
-You can add a screenshot or deployed project link here after publishing the project.
-
-### Desktop
-
-Add a screenshot:
+Check out my portfolio browser for the application screenshots!
 
 ```text
-![Weather Dashboard Desktop Screenshot](screenshots/desktop.png)
+https://bmarkjan-stack.github.io
 ```
 
-### Mobile
-
-Add a screenshot:
+## Desktop
 
 ```text
-![Weather Dashboard Mobile Screenshot](screenshots/mobile.png)
-```
-
-### Live Demo
-
-After deploying the project, add your live website here:
-
-```text
-Live Demo: YOUR_DEPLOYED_PROJECT_URL
+![Weather Dashboard Desktop Screenshot 1](images/p3-1.png)
+![Weather Dashboard Desktop Screenshot 1](images/p3-2.png)
+![Weather Dashboard Desktop Screenshot 1](images/p3-3.png)
+![Weather Dashboard Desktop Screenshot 1](images/p3-4.png)
 ```
 
 ---
