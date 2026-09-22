@@ -497,6 +497,51 @@ button {
 }
 
 /* ================================
+   Hourly Forecast
+================================ */
+.hourly-section {
+    padding: clamp(22px, 4vw, 32px);
+}
+
+.hourly-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+}
+
+.hourly-card {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    min-width: 84px;
+    text-align: center;
+    padding: 16px 10px;
+    border-radius: var(--radius-md);
+    background: var(--tile-bg);
+}
+
+.hourly-card.is-now {
+    background: var(--accent-tint);
+    border: 1px solid var(--accent);
+}
+
+.hourly-time {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.hourly-icon {
+    font-size: 1.7rem;
+    margin: 10px 0;
+}
+
+.hourly-temp {
+    font-weight: 800;
+}
+
+/* ================================
    Forecast
 ================================ */
 

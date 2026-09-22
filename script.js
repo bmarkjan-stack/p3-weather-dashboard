@@ -324,6 +324,52 @@ function findCurrentHourIndex(hourlyTimes, currentTimeIso) {
 }
 
 // ==========================================
+// Display Hourly Forecast
+// ==========================================
+
+function displayHourly(hourly, startIndex) {
+    hourlyForecastContainer.innerHTML = "";
+    const hoursToShow = 24;
+
+    for (let offset = 0; offset < hoursToShow; offset++) {
+        const i = startIndex + offset;
+        if (i >= hourly.time.length) break;
+
+        const time = new Date(hourly.time[i]);
+        const weatherInfo = getWeatherInfo(hourly.weather_code[i]);
+        const temp = formatTemperature(hourly.temperature_2m[i]);
+
+        const card = document.createElement("div");
+        card.className = "hourly-card" + (offset === 0 ? " is-now" : "");
+        card.innerHTML = `
+            <p class="hourly-time">${offset === 0 ? "Now" : formatHour(time)}</p>
+            <div class="hourly-icon" aria-hidden="true">${weatherInfo.icon}</div>
+            <p class="hourly-temp">${temp}${unitSymbol()}</p>
+        `;
+        hourlyForecastContainer.appendChild(card);
+    }
+}
+
+function formatHour(date) {
+    return date.toLocaleTimeString("en-US", { hour: "numeric" });
+}
+
+function formatTime(isoString) {
+    if (!isoString) return "—";
+    return new Date(isoString).toLocaleTimeString(
+        "en-US",
+        { hour: "numeric", minute: "2-digit" }
+    );
+}
+
+function formatSavedAt(isoString) {
+    return new Date(isoString).toLocaleString(
+        "en-US",
+        { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }
+    );
+}
+
+// ==========================================
 // Display Forecast
 // ==========================================
 
