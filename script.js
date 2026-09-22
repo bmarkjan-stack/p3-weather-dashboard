@@ -1,14 +1,15 @@
 // ==========================================
 // Weather Dashboard
 // ==========================================
-
 // Open-Meteo APIs
 const GEOCODING_API = "https://geocoding-api.open-meteo.com/v1/search";
-
 const WEATHER_API = "https://api.open-meteo.com/v1/forecast";
 
-// LocalStorage key
+// LocalStorage keys
 const STORAGE_KEY = "weatherDashboardRecentCities";
+const UNIT_KEY = "weatherDashboardUnit";
+const THEME_KEY = "weatherDashboardTheme";
+const LAST_WEATHER_KEY = "weatherDashboardLastWeather";
 
 // Maximum number of recently searched cities
 const MAX_RECENT_CITIES = 5;
@@ -17,10 +18,10 @@ const MAX_RECENT_CITIES = 5;
 // ==========================================
 // DOM Elements
 // ==========================================
-
 const searchForm = document.getElementById("search-form");
 const cityInput = document.getElementById("city-input");
 const searchButton = document.getElementById("search-button");
+
 const errorMessage = document.getElementById("error-message");
 const loading = document.getElementById("loading");
 const weatherDashboard = document.getElementById("weather-dashboard");
@@ -28,138 +29,65 @@ const locationName = document.getElementById("location-name");
 const dateElement = document.getElementById("date");
 const weatherIcon = document.getElementById("weather-icon");
 const currentTemperature = document.getElementById("current-temperature");
+
 const weatherCondition = document.getElementById("weather-condition");
 const humidity = document.getElementById("humidity");
 const windSpeed = document.getElementById("wind-speed");
+
 const forecast = document.getElementById("forecast");
 const recentCities = document.getElementById("recent-cities");
 const clearHistoryButton = document.getElementById("clear-history");
+
+const unitCButton = document.getElementById("unit-c");
+const unitFButton = document.getElementById("unit-f");
+const themeToggle = document.getElementById("theme-toggle");
+const themeToggleIcon = document.getElementById("theme-toggle-icon");
+const themeColorMeta = document.getElementById("theme-color-meta");
+
+// ==========================================
+// State
+// ==========================================
+let unit = "C"; // "C" or "F"
+let currentLocation = null;
+let currentWeatherData = null;
+
 // ==========================================
 // Weather Code Information
 // ==========================================
-
 function getWeatherInfo(weatherCode) {
     const weatherCodes = {
 
-        0: {
-            condition: "Clear Sky",
-            icon: "☀️"
-        },
+        0: { condition: "Clear Sky", icon: "☀️", group: "clear" },
+        1: { condition: "Mainly Clear", icon: "🌤️", group: "clear" },
+        2: { condition: "Partly Cloudy", icon: "⛅", group: "cloudy" },
+        3: { condition: "Overcast", icon: "☁️", group: "cloudy" },
 
-        1: {
-            condition: "Mainly Clear",
-            icon: "🌤️"
-        },
+        45: { condition: "Fog", icon: "🌫️", group: "fog" },
+        48: { condition: "Depositing Rime Fog", icon: "🌫️", group: "fog" },
 
-        2: {
-            condition: "Partly Cloudy",
-            icon: "⛅"
-        },
+        51: { condition: "Light Drizzle", icon: "🌦️", group: "rain" },
+        53: { condition: "Moderate Drizzle", icon: "🌦️", group: "rain" },
+        55: { condition: "Dense Drizzle", icon: "🌧️", group: "rain" },
 
-        3: {
-            condition: "Overcast",
-            icon: "☁️"
-        },
+        61: { condition: "Slight Rain", icon: "🌦️", group: "rain" },
+        63: { condition: "Moderate Rain", icon: "🌧️", group: "rain" },
+        65: { condition: "Heavy Rain", icon: "🌧️", group: "rain" },
 
-        45: {
-            condition: "Fog",
-            icon: "🌫️"
-        },
+        71: { condition: "Slight Snow", icon: "🌨️", group: "snow" },
+        73: { condition: "Moderate Snow", icon: "🌨️", group: "snow" },
+        75: { condition: "Heavy Snow", icon: "❄️", group: "snow" },
+        77: { condition: "Snow Grains", icon: "❄️", group: "snow" },
 
-        48: {
-            condition: "Depositing Rime Fog",
-            icon: "🌫️"
-        },
+        80: { condition: "Slight Rain Showers", icon: "🌦️", group: "rain" },
+        81: { condition: "Moderate Rain Showers", icon: "🌧️", group: "rain" },
+        82: { condition: "Violent Rain Showers", icon: "⛈️", group: "rain" },
 
-        51: {
-            condition: "Light Drizzle",
-            icon: "🌦️"
-        },
+        85: { condition: "Slight Snow Showers", icon: "🌨️", group: "snow" },
+        86: { condition: "Heavy Snow Showers", icon: "❄️", group: "snow" },
 
-        53: {
-            condition: "Moderate Drizzle",
-            icon: "🌦️"
-        },
-
-        55: {
-            condition: "Dense Drizzle",
-            icon: "🌧️"
-        },
-
-        61: {
-            condition: "Slight Rain",
-            icon: "🌦️"
-        },
-
-        63: {
-            condition: "Moderate Rain",
-            icon: "🌧️"
-        },
-
-        65: {
-            condition: "Heavy Rain",
-            icon: "🌧️"
-        },
-
-        71: {
-            condition: "Slight Snow",
-            icon: "🌨️"
-        },
-
-        73: {
-            condition: "Moderate Snow",
-            icon: "🌨️"
-        },
-
-        75: {
-            condition: "Heavy Snow",
-            icon: "❄️"
-        },
-
-        77: {
-            condition: "Snow Grains",
-            icon: "❄️"
-        },
-
-        80: {
-            condition: "Slight Rain Showers",
-            icon: "🌦️"
-        },
-
-        81: {
-            condition: "Moderate Rain Showers",
-            icon: "🌧️"
-        },
-
-        82: {
-            condition: "Violent Rain Showers",
-            icon: "⛈️"
-        },
-
-        85: {
-            condition: "Slight Snow Showers",
-            icon: "🌨️"
-        },
-
-        86: {
-            condition: "Heavy Snow Showers",
-            icon: "❄️"
-        },
-
-        95: {
-            condition: "Thunderstorm",
-            icon: "⛈️"
-        },
-
-        96: {
-            condition: "Thunderstorm With Hail",
-            icon: "⛈️"
-        },
-
-        99: {
-            condition: "Heavy Thunderstorm With Hail",
-            icon: "⛈️"
-        }
+        95: { condition: "Thunderstorm", icon: "⛈️", group: "thunder" },
+        96: { condition: "Thunderstorm With Hail", icon: "⛈️", group: "thunder" },
+        99: { condition: "Heavy Thunderstorm With Hail", icon: "⛈️", group: "thunder" }
 
     };
     return weatherCodes[weatherCode] || {

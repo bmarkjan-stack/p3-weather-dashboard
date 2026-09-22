@@ -82,13 +82,13 @@
             <article class="current-weather card">
                 <div class="current-header">
                     <div>
-                        <p class="location-label">CURRENT WEATHER</p>
+                        <p class="location-label">Current weather</p>
                         <h2 id="location-name">
                             Manila, Philippines
                         </h2>
                         <p id="date" class="date"></p>
                     </div>
-                    <div id="weather-icon" class="weather-icon">
+                    <div id="weather-icon" class="weather-icon" aria-hidden="true">
                         ☀️
                     </div>
                 </div>
@@ -96,7 +96,7 @@
                     <span id="current-temperature">
                         31
                     </span>
-                    <span class="temperature-unit">°C</span>
+                    <span class="temperature-unit" id="current-temperature-unit">°C</span>
                 </div>
                 <p id="weather-condition" class="weather-condition">
                     Partly Cloudy
