@@ -370,6 +370,84 @@ function formatSavedAt(isoString) {
 }
 
 // ==========================================
+// Temperature Chart (plain inline SVG)
+// ==========================================
+
+function renderChart(hourly, startIndex) {
+    const hoursToShow = 24;
+    const points = [];
+    for (let offset = 0; offset < hoursToShow; offset++) {
+        const i = startIndex + offset;
+        if (i >= hourly.time.length) break;
+        points.push({
+            time: new Date(hourly.time[i]),
+            temp: convertTemperature(hourly.temperature_2m[i])
+        });
+    }
+
+    if (points.length === 0) {
+        chartContainer.innerHTML = "";
+        return;
+    }
+
+    const width = 640;
+    const height = 220;
+    const paddingX = 12;
+    const paddingTop = 28;
+    const paddingBottom = 28;
+
+    const temps = points.map((p) => p.temp);
+    const minTemp = Math.min(...temps);
+    const maxTemp = Math.max(...temps);
+    const range = maxTemp - minTemp || 1;
+
+    const stepX = (width - paddingX * 2) / (points.length - 1 || 1);
+    const scaleY = (t) =>
+        height - paddingBottom -
+        ((t - minTemp) / range) * (height - paddingTop - paddingBottom);
+
+    const coords = points.map((p, i) => ({
+        x: paddingX + i * stepX,
+        y: scaleY(p.temp)
+    }));
+
+    const linePath = coords
+        .map((c, i) => `${i === 0 ? "M" : "L"} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`)
+        .join(" ");
+
+    const areaPath =
+        `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${height - paddingBottom} ` +
+        `L ${coords[0].x.toFixed(1)} ${height - paddingBottom} Z`;
+
+    // Label every 4th hour on the x-axis, plus data points at those marks
+    const labelInterval = 4;
+    let markup = "";
+    coords.forEach((c, i) => {
+        if (i % labelInterval === 0 || i === coords.length - 1) {
+            const label = i === 0 ? "Now" : formatHour(points[i].time);
+            markup += `<text class="chart-axis-label" x="${c.x.toFixed(1)}" y="${height - 8}" text-anchor="middle">${label}</text>`;
+            markup += `<text class="chart-value-label" x="${c.x.toFixed(1)}" y="${(c.y - 12).toFixed(1)}" text-anchor="middle">${Math.round(points[i].temp)}°</text>`;
+            markup += `<circle class="chart-point" cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="3.5"></circle>`;
+        }
+    });
+
+    chartContainer.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-labelledby="chart-title">
+            <title id="chart-title">Hourly temperature trend</title>
+            <path class="chart-fill" d="${areaPath}"></path>
+            <path class="chart-line" d="${linePath}"></path>
+            ${markup}
+        </svg>
+    `;
+
+    const low = Math.round(minTemp);
+    const high = Math.round(maxTemp);
+    chartDescription.textContent =
+        `Temperature over the next ${points.length} hours ranges from ` +
+        `${low}${unitSymbol()} to ${high}${unitSymbol()}.`;
+}
+
+// ==========================================
 // Display Forecast
 // ==========================================
 
