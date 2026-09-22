@@ -101,23 +101,69 @@
                 <p id="weather-condition" class="weather-condition">
                     Partly Cloudy
                 </p>
-                <div class="weather-details">
+
+                <div class="weather-details" id="weather-details">
                     <div class="detail">
-                        <span class="detail-icon">💧</span>
+                        <span class="detail-icon" aria-hidden="true">🌡️</span>
                         <div>
-                            <p class="detail-label">Humidity</p>
-                            <p id="humidity" class="detail-value">
-                                72%
-                            </p>
+                            <p class="detail-label">Feels like</p>
+                            <p id="feels-like" class="detail-value">—</p>
                         </div>
                     </div>
                     <div class="detail">
-                        <span class="detail-icon">💨</span>
+                        <span class="detail-icon" aria-hidden="true">💧</span>
+                        <div>
+                            <p class="detail-label">Humidity</p>
+                            <p id="humidity" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">💨</span>
                         <div>
                             <p class="detail-label">Wind</p>
-                            <p id="wind-speed" class="detail-value">
-                                14 km/h
-                            </p>
+                            <p id="wind-speed" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">🌧️</span>
+                        <div>
+                            <p class="detail-label">Precipitation</p>
+                            <p id="precipitation" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">🧭</span>
+                        <div>
+                            <p class="detail-label">Pressure</p>
+                            <p id="pressure" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">👁️</span>
+                        <div>
+                            <p class="detail-label">Visibility</p>
+                            <p id="visibility" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">🔆</span>
+                        <div>
+                            <p class="detail-label">UV index</p>
+                            <p id="uv-index" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">🌅</span>
+                        <div>
+                            <p class="detail-label">Sunrise</p>
+                            <p id="sunrise" class="detail-value">—</p>
+                        </div>
+                    </div>
+                    <div class="detail">
+                        <span class="detail-icon" aria-hidden="true">🌇</span>
+                        <div>
+                            <p class="detail-label">Sunset</p>
+                            <p id="sunset" class="detail-value">—</p>
                         </div>
                     </div>
                 </div>

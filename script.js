@@ -28,11 +28,17 @@ const weatherDashboard = document.getElementById("weather-dashboard");
 const locationName = document.getElementById("location-name");
 const dateElement = document.getElementById("date");
 const weatherIcon = document.getElementById("weather-icon");
-const currentTemperature = document.getElementById("current-temperature");
-
+const currentTemperature = document.getElementById("current-temperature");  
 const weatherCondition = document.getElementById("weather-condition");
 const humidity = document.getElementById("humidity");
 const windSpeed = document.getElementById("wind-speed");
+const feelsLike = document.getElementById("feels-like");
+const precipitationEl = document.getElementById("precipitation");
+const pressureEl = document.getElementById("pressure");
+const visibilityEl = document.getElementById("visibility");
+const uvIndexEl = document.getElementById("uv-index");
+const sunriseEl = document.getElementById("sunrise");
+const sunsetEl = document.getElementById("sunset");
 
 const forecast = document.getElementById("forecast");
 const recentCities = document.getElementById("recent-cities");
@@ -243,17 +249,27 @@ async function getWeather(latitude, longitude) {
 }
 
 // ==========================================
-// Display Weather
+// Render Weather
 // ==========================================
 
-function displayWeather(location, weatherData) {
+function renderWeather(location, weatherData) {
+    currentLocation = location;
+    currentWeatherData = weatherData;
+
     const current = weatherData.current;
-    const daily = weatherData.daily;
     const weatherInfo = getWeatherInfo(current.weather_code);
+    const startIndex = findCurrentHourIndex(hourly.time, current.time);
+
+    // Background theme based on current conditions
+    document.documentElement.dataset.weather =
+        getWeatherBackground(current.weather_code, current.is_day === 1);
+    updateThemeColorMeta();
 
     // Location
     const countryName = location.country || "";
-    locationName.textContent = `${location.name}, ${countryName}`;
+    locationName.textContent = countryName
+        ? `${location.name}, ${countryName}`
+        : location.name;
 
     // Date
     const currentDate = new Date(current.time);
@@ -261,16 +277,50 @@ function displayWeather(location, weatherData) {
 
     // Current weather
     weatherIcon.textContent = weatherInfo.icon;
-    currentTemperature.textContent = Math.round(current.temperature_2m);
+    currentTemperature.textContent = formatTemperature(current.temperature_2m);
+    currentTemperatureUnit.textContent = unitSymbol();
     weatherCondition.textContent = weatherInfo.condition;
+
+    // Details
     humidity.textContent = `${current.relative_humidity_2m}%`;
     windSpeed.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+    feelsLike.textContent = `${formatTemperature(current.apparent_temperature)}${unitSymbol()}`;
+    precipitationEl.textContent = `${current.precipitation.toFixed(1)} mm`;
+    pressureEl.textContent = `${Math.round(current.pressure_msl)} hPa`;
 
-    // Forecast
-    displayForecast(daily);
+    const visibilityMeters = hourly.visibility ? hourly.visibility[startIndex] : null;
+    visibilityEl.textContent = visibilityMeters != null
+        ? `${(visibilityMeters / 1000).toFixed(1)} km`
+        : "—";
+
+    const uvValue = hourly.uv_index ? hourly.uv_index[startIndex] : daily.uv_index_max[0];
+    uvIndexEl.textContent = uvValue != null
+        ? `${uvValue.toFixed(1)} · ${uvCategory(uvValue)}`
+        : "—";
+
+    sunriseEl.textContent = formatTime(daily.sunrise[0]);
+    sunsetEl.textContent = formatTime(daily.sunset[0]);
 
     // Show dashboard
     weatherDashboard.classList.remove("hidden");
+}
+
+function uvCategory(value) {
+    if (value < 3) return "Low";
+    if (value < 6) return "Moderate";
+    if (value < 8) return "High";
+    if (value < 11) return "Very High";
+    return "Extreme";
+}
+
+function findCurrentHourIndex(hourlyTimes, currentTimeIso) {
+    const current = new Date(currentTimeIso);
+    for (let i = 0; i < hourlyTimes.length; i++) {
+        if (new Date(hourlyTimes[i]) >= current) {
+            return i;
+        }
+    }
+    return 0;
 }
 
 // ==========================================
