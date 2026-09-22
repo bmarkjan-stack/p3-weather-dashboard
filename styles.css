@@ -1,4 +1,46 @@
 /* ================================
+   Design Tokens
+================================ */
+
+:root {
+    color-scheme: light;
+
+    /* Base surfaces */
+    --bg-1: #eef6ff;
+    --bg-2: #f8fbff;
+    --bg-3: #eaf4ff;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(215, 223, 235, 0.8);
+    --tile-bg: #f5f8fd;
+    --input-bg: #ffffff;
+    --border: #d7dfeb;
+
+    /* Text */
+    --text: #172033;
+    --muted: #485365;
+    --faint: #8993a5;
+
+    /* Accent */
+    --accent: #2648b8;
+    --accent-strong: #1c3690;
+    --accent-tint: #eaf0ff;
+    --on-accent: #ffffff;
+
+    /* Status */
+    --danger: #a5190f;
+    --chart-line: #2648b8;
+    --chart-fill: rgba(38, 72, 184, 0.14);
+
+    /* Shape */
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 12px;
+    --shadow-card: 0 15px 40px rgba(43, 65, 100, 0.08);
+
+    --focus-ring: 0 0 0 3px rgba(38, 72, 184, 0.28);
+}
+
+/* ================================
    Reset
 ================================ */
 
