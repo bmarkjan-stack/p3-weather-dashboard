@@ -69,6 +69,25 @@
     --focus-ring: 0 0 0 3px rgba(157, 184, 255, 0.35);
 }
 
+/* Weather-based background washes. Applied on top of the base
+   gradient; text still relies on --text / --muted / --accent which
+   are checked for contrast against every wash below. */
+:root[data-weather="clear-day"]    { --bg-1: #cfe8ff; --bg-2: #e3f2ff; --bg-3: #cfe0ff; }
+:root[data-weather="clear-night"]  { --bg-1: #cdd3f0; --bg-2: #dbe0f7; --bg-3: #c9cdec; }
+:root[data-weather="cloudy"]       { --bg-1: #d9dfe8; --bg-2: #e6eaf0; --bg-3: #d5dbe4; }
+:root[data-weather="fog"]          { --bg-1: #e1e5ea; --bg-2: #ecefF2; --bg-3: #dde1e6; }
+:root[data-weather="rain"]         { --bg-1: #d0dbe9; --bg-2: #e0e8f2; --bg-3: #ccd8e7; }
+:root[data-weather="snow"]         { --bg-1: #e4edf8; --bg-2: #f2f7fc; --bg-3: #e0eaf6; }
+:root[data-weather="thunder"]      { --bg-1: #d3d2e5; --bg-2: #e2e1ef; --bg-3: #cecde1; }
+
+:root[data-theme="dark"][data-weather="clear-day"]    { --bg-1: #123458; --bg-2: #17416f; --bg-3: #0f2c49; }
+:root[data-theme="dark"][data-weather="clear-night"]  { --bg-1: #171337; --bg-2: #1f1a38; --bg-3: #120f2c; }
+:root[data-theme="dark"][data-weather="cloudy"]       { --bg-1: #1c2739; --bg-2: #263447; --bg-3: #17202e; }
+:root[data-theme="dark"][data-weather="fog"]          { --bg-1: #1f2732; --bg-2: #2a3038; --bg-3: #191f27; }
+:root[data-theme="dark"][data-weather="rain"]         { --bg-1: #182233; --bg-2: #232b38; --bg-3: #131b28; }
+:root[data-theme="dark"][data-weather="snow"]         { --bg-1: #1a2434; --bg-2: #22314a; --bg-3: #151e2c; }
+:root[data-theme="dark"][data-weather="thunder"]      { --bg-1: #131a2c; --bg-2: #17273b; --bg-3: #0f1523; }
+
 /* ================================
    Reset
 ================================ */

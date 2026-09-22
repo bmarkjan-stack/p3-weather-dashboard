@@ -102,6 +102,15 @@ function getWeatherInfo(weatherCode) {
     };
 }
 
+// Maps a weather code + day/night flag to a background theme name
+function getWeatherBackground(weatherCode, isDay) {
+    const { group } = getWeatherInfo(weatherCode);
+    if (group === "clear") {
+        return isDay ? "clear-day" : "clear-night";
+    }
+    return group;
+}
+
 // ==========================================
 // Temperature Units
 // ==========================================
