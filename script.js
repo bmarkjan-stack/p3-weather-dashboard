@@ -169,6 +169,60 @@ function getWeatherInfo(weatherCode) {
 }
 
 // ==========================================
+// Theme (Light / Dark)
+// ==========================================
+
+function applyTheme(theme) {
+    if (theme === "dark") {
+        document.documentElement.dataset.theme = "dark";
+        themeToggleIcon.textContent = "☀️";
+        themeToggle.setAttribute("aria-pressed", "true");
+        themeToggle.setAttribute("aria-label", "Switch to light theme");
+    } else {
+        delete document.documentElement.dataset.theme;
+        themeToggleIcon.textContent = "🌙";
+        themeToggle.setAttribute("aria-pressed", "false");
+        themeToggle.setAttribute("aria-label", "Switch to dark theme");
+    }
+    updateThemeColorMeta();
+}
+
+function updateThemeColorMeta() {
+    const bg = getComputedStyle(document.documentElement)
+        .getPropertyValue("--bg-2")
+        .trim();
+    if (bg) {
+        themeColorMeta.setAttribute("content", bg);
+    }
+}
+
+function initTheme() {
+    let savedTheme = null;
+    try {
+        savedTheme = localStorage.getItem(THEME_KEY);
+    } catch (error) {
+        console.error("Unable to read saved theme:", error);
+    }
+    if (savedTheme === "dark" || savedTheme === "light") {
+        applyTheme(savedTheme);
+        return;
+    }
+    const prefersDark = window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(prefersDark ? "dark" : "light");
+}
+
+themeToggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try {
+        localStorage.setItem(THEME_KEY, next);
+    } catch (error) {
+        console.error("Unable to save theme:", error);
+    }
+});
+
+// ==========================================
 // Search City
 // ==========================================
 
