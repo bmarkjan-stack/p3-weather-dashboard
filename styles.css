@@ -587,6 +587,7 @@ button {
 /* ================================
    Forecast
 ================================ */
+
 .forecast-section h2 {
     margin-top: 3px;
 }
@@ -600,8 +601,8 @@ button {
 .forecast-card {
     padding: 22px 15px;
     text-align: center;
-    background: #ffffff;
-    border: 1px solid #e0e6ef;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
     border-radius: 18px;
     box-shadow: 0 8px 25px rgba(43, 65, 100, 0.05);
     transition: transform 0.2s, box-shadow 0.2s;
@@ -613,7 +614,7 @@ button {
 }
 
 .forecast-day {
-    color: #536074;
+    color: var(--muted);
     font-size: 0.9rem;
     font-weight: 700;
 }
@@ -625,7 +626,7 @@ button {
 
 .forecast-condition {
     min-height: 44px;
-    color: #7c8799;
+    color: var(--faint);
     font-size: 0.78rem;
 }
 
@@ -641,8 +642,9 @@ button {
 }
 
 .forecast-low {
-    color: #8993a5;
+    color: var(--faint);
 }
+
 
 /* ================================
    Footer

@@ -448,23 +448,28 @@ function renderChart(hourly, startIndex) {
 }
 
 // ==========================================
-// Display Forecast
+// Display 5-Day Forecast
 // ==========================================
 
 function displayForecast(daily) {
     forecast.innerHTML = "";
-    for (let i = 0; i < daily.time.length; i++) {
+    // API is requested with forecast_days=6 so the hourly array has
+    // enough headroom for a full "next 24 hours" window even late in
+    // the day; the daily forecast itself still shows 5 days.
+    const daysToShow = Math.min(5, daily.time.length);
+
+    for (let i = 0; i < daysToShow; i++) {
         const date = new Date(`${daily.time[i]}T12:00:00`);
         const weatherInfo = getWeatherInfo(daily.weather_code[i]);
-        const high = Math.round(daily.temperature_2m_max[i]);
-        const low = Math.round(daily.temperature_2m_min[i]);
+        const high = formatTemperature(daily.temperature_2m_max[i]);
+        const low = formatTemperature(daily.temperature_2m_min[i]);
         const forecastCard = document.createElement("article");
         forecastCard.className = "forecast-card";
         forecastCard.innerHTML = `
             <p class="forecast-day">
                 ${getForecastDay(date, i)}
             </p>
-            <div class="forecast-icon">
+            <div class="forecast-icon" aria-hidden="true">
                 ${weatherInfo.icon}
             </div>
             <p class="forecast-condition">
