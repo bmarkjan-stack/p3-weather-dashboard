@@ -169,6 +169,52 @@ function getWeatherInfo(weatherCode) {
 }
 
 // ==========================================
+// Temperature Units
+// ==========================================
+
+function convertTemperature(celsius) {
+    return unit === "F" ? (celsius * 9) / 5 + 32 : celsius;
+}
+
+function formatTemperature(celsius) {
+    return Math.round(convertTemperature(celsius));
+}
+
+function unitSymbol() {
+    return unit === "F" ? "°F" : "°C";
+}
+
+function setUnit(newUnit) {
+    unit = newUnit;
+    try {
+        localStorage.setItem(UNIT_KEY, unit);
+    } catch (error) {
+        console.error("Unable to save temperature unit:", error);
+    }
+    unitCButton.setAttribute("aria-pressed", String(unit === "C"));
+    unitFButton.setAttribute("aria-pressed", String(unit === "F"));
+    currentTemperatureUnit.textContent = unitSymbol();
+
+    // Re-render already-loaded weather in the new unit, without a refetch
+    if (currentLocation && currentWeatherData) {
+        renderWeather(currentLocation, currentWeatherData);
+    }
+}
+
+function initUnit() {
+    let savedUnit = "C";
+    try {
+        savedUnit = localStorage.getItem(UNIT_KEY) || "C";
+    } catch (error) {
+        console.error("Unable to read saved temperature unit:", error);
+    }
+    setUnit(savedUnit === "F" ? "F" : "C");
+}
+
+unitCButton.addEventListener("click", () => setUnit("C"));
+unitFButton.addEventListener("click", () => setUnit("F"));
+
+// ==========================================
 // Theme (Light / Dark)
 // ==========================================
 
