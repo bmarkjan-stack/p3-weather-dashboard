@@ -5,6 +5,9 @@
 const GEOCODING_API = "https://geocoding-api.open-meteo.com/v1/search";
 const WEATHER_API = "https://api.open-meteo.com/v1/forecast";
 
+// Reverse geocoding for "My location" (no API key required)
+const REVERSE_GEOCODE_API = "https://api.bigdatacloud.net/data/reverse-geocode-client";
+
 // LocalStorage keys
 const STORAGE_KEY = "weatherDashboardRecentCities";
 const UNIT_KEY = "weatherDashboardUnit";
@@ -21,14 +24,15 @@ const MAX_RECENT_CITIES = 5;
 const searchForm = document.getElementById("search-form");
 const cityInput = document.getElementById("city-input");
 const searchButton = document.getElementById("search-button");
-
+const geolocateButton = document.getElementById("geolocate-button");
 const errorMessage = document.getElementById("error-message");
 const loading = document.getElementById("loading");
 const weatherDashboard = document.getElementById("weather-dashboard");
 const locationName = document.getElementById("location-name");
 const dateElement = document.getElementById("date");
 const weatherIcon = document.getElementById("weather-icon");
-const currentTemperature = document.getElementById("current-temperature");  
+const currentTemperature = document.getElementById("current-temperature");
+const currentTemperatureUnit = document.getElementById("current-temperature-unit");
 const weatherCondition = document.getElementById("weather-condition");
 const humidity = document.getElementById("humidity");
 const windSpeed = document.getElementById("wind-speed");
@@ -39,7 +43,9 @@ const visibilityEl = document.getElementById("visibility");
 const uvIndexEl = document.getElementById("uv-index");
 const sunriseEl = document.getElementById("sunrise");
 const sunsetEl = document.getElementById("sunset");
-
+const hourlyForecastContainer = document.getElementById("hourly-forecast");
+const chartContainer = document.getElementById("chart-container");
+const chartDescription = document.getElementById("chart-description");
 const forecast = document.getElementById("forecast");
 const recentCities = document.getElementById("recent-cities");
 const clearHistoryButton = document.getElementById("clear-history");
@@ -232,6 +238,30 @@ async function searchCity(city) {
         );
     }
     return data.results[0];
+}
+
+// ==========================================
+// Reverse Geocoding (for "My location")
+// ==========================================
+
+async function reverseGeocode(latitude, longitude) {
+    try {
+        const url =
+            `${REVERSE_GEOCODE_API}?latitude=${latitude}` +
+            `&longitude=${longitude}&localityLanguage=en`;
+        const response = await fetch(url);
+        if (!response.ok) return null;
+        const data = await response.json();
+        const name = data.city || data.locality || data.principalSubdivision;
+        if (!name) return null;
+        return {
+            name,
+            country: data.countryName || ""
+        };
+    } catch (error) {
+        console.error("Reverse geocoding failed:", error);
+        return null;
+    }
 }
 
 // ==========================================
@@ -727,6 +757,47 @@ clearHistoryButton.addEventListener(
         displayRecentCities();
     }
 );
+
+// ==========================================
+// Geolocation ("My location")
+// ==========================================
+
+geolocateButton.addEventListener("click", () => {
+    if (!("geolocation" in navigator)) {
+        showError("Your browser doesn't support location lookup.");
+        return;
+    }
+
+    showLoading();
+    announce("Requesting your location.");
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            const { latitude, longitude } = position.coords;
+            const place = await reverseGeocode(latitude, longitude);
+            const location = {
+                name: place ? place.name : "Current Location",
+                country: place ? place.country : "",
+                latitude,
+                longitude
+            };
+            // loadWeatherForLocation manages its own loading state,
+            // so release the one we just set before delegating.
+            hideLoading();
+            await loadWeatherForLocation(location);
+        },
+        (error) => {
+            hideLoading();
+            const messages = {
+                1: "Location access was denied. You can search for a city instead.",
+                2: "Your location isn't available right now.",
+                3: "Getting your location took too long. Please try again."
+            };
+            showError(messages[error.code] || "Unable to get your location.");
+        },
+        { timeout: 10000 }
+    );
+});
 
 // ==========================================
 // Initial Page Load
