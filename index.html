@@ -9,6 +9,7 @@
 
 <body>
     <main class="container">
+
         <!-- Header -->
         <header class="header">
             <div>
@@ -34,26 +35,48 @@
                 </button>
             </div>
         </header>
+
         <!-- Search -->
         <section class="search-section">
-            <form id="search-form" class="search-form">
-                <label for="city-input" class="sr-only">
-                    Search for a city
-                </label>
-                <input
-                    type="text"
-                    id="city-input"
-                    placeholder="Search for a city... e.g., Manila, Philippines (City, Country)"
-                    autocomplete="off"
-                    required
+            <form id="search-form" class="search-form" role="search" autocomplete="off">
+                <div class="combobox-wrapper">
+                    <label for="city-input" class="sr-only">
+                        Search for a city
+                    </label>
+                    <input
+                        type="text"
+                        id="city-input"
+                        placeholder="Search for a city... e.g., Manila, Philippines"
+                        autocomplete="off"
+                        role="combobox"
+                        aria-expanded="false"
+                        aria-controls="suggestions-list"
+                        aria-autocomplete="list"
+                        aria-describedby="search-hint"
+                        required
+                    >
+                    <span id="search-hint" class="sr-only">
+                        Suggestions will appear below as you type. Use the arrow keys to browse them and Enter to choose one.
+                    </span>
+                    <ul id="suggestions-list" class="suggestions-list hidden" role="listbox" aria-label="City suggestions"></ul>
+                </div>
+                <button
+                    type="button"
+                    id="geolocate-button"
+                    class="secondary-button"
+                    aria-label="Use my current location"
+                    title="Use my current location"
                 >
-                
+                    <span aria-hidden="true">📍</span>
+                    <span class="geolocate-label">My location</span>
+                </button>
                 <button type="submit" id="search-button">
                     Search
                 </button>
             </form>
             <p id="error-message" class="error-message" role="alert"></p>
         </section>
+
         <!-- Recently Searched -->
         <section class="recent-section">
             <div class="section-heading">
@@ -72,11 +95,13 @@
                 </p>
             </div>
         </section>
+
         <!-- Loading -->
         <div id="loading" class="loading hidden">
             <div class="spinner"></div>
             <p>Loading weather...</p>
         </div>
+
         <!-- Weather Dashboard -->
         <section id="weather-dashboard" class="weather-dashboard hidden">
             <!-- Current Weather -->
@@ -102,7 +127,6 @@
                 <p id="weather-condition" class="weather-condition">
                     Partly Cloudy
                 </p>
-
                 <div class="weather-details" id="weather-details">
                     <div class="detail">
                         <span class="detail-icon" aria-hidden="true">🌡️</span>

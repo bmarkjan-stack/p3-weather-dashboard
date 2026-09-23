@@ -17,6 +17,9 @@ const LAST_WEATHER_KEY = "weatherDashboardLastWeather";
 // Maximum number of recently searched cities
 const MAX_RECENT_CITIES = 5;
 
+// Search-suggestion behavior
+const SUGGESTION_DEBOUNCE_MS = 250;
+const MIN_SUGGESTION_LENGTH = 2;
 
 // ==========================================
 // DOM Elements
@@ -49,7 +52,7 @@ const chartDescription = document.getElementById("chart-description");
 const forecast = document.getElementById("forecast");
 const recentCities = document.getElementById("recent-cities");
 const clearHistoryButton = document.getElementById("clear-history");
-
+const suggestionsList = document.getElementById("suggestions-list");
 const unitCButton = document.getElementById("unit-c");
 const unitFButton = document.getElementById("unit-f");
 const themeToggle = document.getElementById("theme-toggle");
@@ -120,7 +123,6 @@ function getWeatherBackground(weatherCode, isDay) {
 // ==========================================
 // Temperature Units
 // ==========================================
-
 function convertTemperature(celsius) {
     return unit === "F" ? (celsius * 9) / 5 + 32 : celsius;
 }
@@ -166,7 +168,6 @@ unitFButton.addEventListener("click", () => setUnit("F"));
 // ==========================================
 // Theme (Light / Dark)
 // ==========================================
-
 function applyTheme(theme) {
     if (theme === "dark") {
         document.documentElement.dataset.theme = "dark";
@@ -220,7 +221,6 @@ themeToggle.addEventListener("click", () => {
 // ==========================================
 // Search City
 // ==========================================
-
 async function searchCity(city) {
     const url =
         `${GEOCODING_API}?name=${encodeURIComponent(city)}` +
@@ -240,10 +240,21 @@ async function searchCity(city) {
     return data.results[0];
 }
 
+async function searchCitySuggestions(city, signal) {
+    const url =
+        `${GEOCODING_API}?name=${encodeURIComponent(city)}` +
+        `&count=5&language=en&format=json`;
+    const response = await fetch(url, { signal });
+    if (!response.ok) {
+        throw new Error("Unable to fetch suggestions.");
+    }
+    const data = await response.json();
+    return data.results || [];
+}
+
 // ==========================================
 // Reverse Geocoding (for "My location")
 // ==========================================
-
 async function reverseGeocode(latitude, longitude) {
     try {
         const url =
@@ -797,6 +808,143 @@ geolocateButton.addEventListener("click", () => {
         },
         { timeout: 10000 }
     );
+});
+
+// ==========================================
+// Search Suggestions (accessible combobox)
+// ==========================================
+
+let suggestionResults = [];
+let activeSuggestionIndex = -1;
+let suggestionDebounceTimer = null;
+let suggestionAbortController = null;
+
+function debounceSuggestions(fn, delay) {
+    return (...args) => {
+        clearTimeout(suggestionDebounceTimer);
+        suggestionDebounceTimer = setTimeout(() => fn(...args), delay);
+    };
+}
+
+const fetchSuggestions = debounceSuggestions(async (query) => {
+    if (suggestionAbortController) {
+        suggestionAbortController.abort();
+    }
+    suggestionAbortController = new AbortController();
+
+    try {
+        const results = await searchCitySuggestions(query, suggestionAbortController.signal);
+        suggestionResults = results;
+        renderSuggestions();
+    } catch (error) {
+        if (error.name !== "AbortError") {
+            console.error("Suggestion lookup failed:", error);
+        }
+    }
+}, SUGGESTION_DEBOUNCE_MS);
+
+function renderSuggestions() {
+    activeSuggestionIndex = -1;
+    suggestionsList.innerHTML = "";
+
+    if (suggestionResults.length === 0) {
+        closeSuggestions();
+        return;
+    }
+
+    suggestionResults.forEach((result, index) => {
+        const region = [result.admin1, result.country].filter(Boolean).join(", ");
+        const item = document.createElement("li");
+        item.className = "suggestion-option";
+        item.id = `suggestion-${index}`;
+        item.role = "option";
+        item.setAttribute("aria-selected", "false");
+        item.innerHTML = `
+            ${result.name}
+            <span class="suggestion-region">${region}</span>
+        `;
+        item.addEventListener("mousedown", (event) => {
+            // mousedown (not click) fires before the input's blur handler
+            event.preventDefault();
+            selectSuggestion(result);
+        });
+        suggestionsList.appendChild(item);
+    });
+
+    suggestionsList.classList.remove("hidden");
+    cityInput.setAttribute("aria-expanded", "true");
+}
+
+function closeSuggestions() {
+    suggestionsList.classList.add("hidden");
+    suggestionsList.innerHTML = "";
+    suggestionResults = [];
+    activeSuggestionIndex = -1;
+    cityInput.setAttribute("aria-expanded", "false");
+    cityInput.removeAttribute("aria-activedescendant");
+}
+
+function moveSuggestionActive(delta) {
+    if (suggestionResults.length === 0) return;
+    const options = suggestionsList.querySelectorAll(".suggestion-option");
+    if (activeSuggestionIndex >= 0) {
+        options[activeSuggestionIndex].setAttribute("aria-selected", "false");
+    }
+    activeSuggestionIndex =
+        (activeSuggestionIndex + delta + options.length) % options.length;
+    const active = options[activeSuggestionIndex];
+    active.setAttribute("aria-selected", "true");
+    active.scrollIntoView({ block: "nearest" });
+    cityInput.setAttribute("aria-activedescendant", active.id);
+}
+
+async function selectSuggestion(result) {
+    cityInput.value = `${result.name}${result.country ? ", " + result.country : ""}`;
+    closeSuggestions();
+    showLoading();
+    try {
+        await loadWeatherForLocation(result);
+        cityInput.value = "";
+    } finally {
+        hideLoading();
+    }
+}
+
+cityInput.addEventListener("input", () => {
+    const query = cityInput.value.trim();
+    if (query.length < MIN_SUGGESTION_LENGTH) {
+        closeSuggestions();
+        return;
+    }
+    fetchSuggestions(query);
+});
+
+cityInput.addEventListener("keydown", (event) => {
+    const suggestionsOpen = !suggestionsList.classList.contains("hidden");
+
+    if (event.key === "ArrowDown" && suggestionsOpen) {
+        event.preventDefault();
+        moveSuggestionActive(1);
+    } else if (event.key === "ArrowUp" && suggestionsOpen) {
+        event.preventDefault();
+        moveSuggestionActive(-1);
+    } else if (event.key === "Enter" && suggestionsOpen && activeSuggestionIndex >= 0) {
+        event.preventDefault();
+        selectSuggestion(suggestionResults[activeSuggestionIndex]);
+    } else if (event.key === "Escape" && suggestionsOpen) {
+        closeSuggestions();
+    }
+});
+
+cityInput.addEventListener("blur", () => {
+    // Delay so a mousedown-based suggestion click can still register.
+    setTimeout(closeSuggestions, 100);
+});
+
+document.addEventListener("click", (event) => {
+    if (!searchForm.contains(event.target)) {
+        closeSuggestions();
+    }
 });
 
 // ==========================================
