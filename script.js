@@ -1,6 +1,7 @@
 // ==========================================
 // Weather Dashboard
 // ==========================================
+
 // Open-Meteo APIs
 const GEOCODING_API = "https://geocoding-api.open-meteo.com/v1/search";
 const WEATHER_API = "https://api.open-meteo.com/v1/forecast";
@@ -21,9 +22,11 @@ const MAX_RECENT_CITIES = 5;
 const SUGGESTION_DEBOUNCE_MS = 250;
 const MIN_SUGGESTION_LENGTH = 2;
 
+
 // ==========================================
 // DOM Elements
 // ==========================================
+
 const searchForm = document.getElementById("search-form");
 const cityInput = document.getElementById("city-input");
 const searchButton = document.getElementById("search-button");
@@ -58,10 +61,14 @@ const unitFButton = document.getElementById("unit-f");
 const themeToggle = document.getElementById("theme-toggle");
 const themeToggleIcon = document.getElementById("theme-toggle-icon");
 const themeColorMeta = document.getElementById("theme-color-meta");
+const installButton = document.getElementById("install-button");
+const offlineBanner = document.getElementById("offline-banner");
+const statusAnnouncer = document.getElementById("status-announcer");
 
 // ==========================================
 // State
 // ==========================================
+
 let unit = "C"; // "C" or "F"
 let currentLocation = null;
 let currentWeatherData = null;
@@ -69,6 +76,7 @@ let currentWeatherData = null;
 // ==========================================
 // Weather Code Information
 // ==========================================
+
 function getWeatherInfo(weatherCode) {
     const weatherCodes = {
 
@@ -107,7 +115,8 @@ function getWeatherInfo(weatherCode) {
     };
     return weatherCodes[weatherCode] || {
         condition: "Unknown",
-        icon: "🌡️"
+        icon: "🌡️",
+        group: "cloudy"
     };
 }
 
@@ -123,6 +132,7 @@ function getWeatherBackground(weatherCode, isDay) {
 // ==========================================
 // Temperature Units
 // ==========================================
+
 function convertTemperature(celsius) {
     return unit === "F" ? (celsius * 9) / 5 + 32 : celsius;
 }
@@ -168,6 +178,7 @@ unitFButton.addEventListener("click", () => setUnit("F"));
 // ==========================================
 // Theme (Light / Dark)
 // ==========================================
+
 function applyTheme(theme) {
     if (theme === "dark") {
         document.documentElement.dataset.theme = "dark";
@@ -219,8 +230,17 @@ themeToggle.addEventListener("click", () => {
 });
 
 // ==========================================
+// Status Announcements (for screen readers)
+// ==========================================
+
+function announce(message) {
+    statusAnnouncer.textContent = message;
+}
+
+// ==========================================
 // Search City
 // ==========================================
+
 async function searchCity(city) {
     const url =
         `${GEOCODING_API}?name=${encodeURIComponent(city)}` +
@@ -255,6 +275,7 @@ async function searchCitySuggestions(city, signal) {
 // ==========================================
 // Reverse Geocoding (for "My location")
 // ==========================================
+
 async function reverseGeocode(latitude, longitude) {
     try {
         const url =
@@ -284,11 +305,13 @@ async function getWeather(latitude, longitude) {
         `${WEATHER_API}?latitude=${latitude}` +
         `&longitude=${longitude}` +
         `&current=temperature_2m,relative_humidity_2m,` +
+        `apparent_temperature,is_day,precipitation,pressure_msl,` +
         `weather_code,wind_speed_10m` +
-        `&daily=weather_code,temperature_2m_max,` +
-        `temperature_2m_min` +
+        `&hourly=temperature_2m,weather_code,uv_index,visibility` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,` +
+        `sunrise,sunset,uv_index_max` +
         `&timezone=auto` +
-        `&forecast_days=5`;
+        `&forecast_days=6`;
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(
@@ -296,6 +319,60 @@ async function getWeather(latitude, longitude) {
         );
     }
     return await response.json();
+}
+
+// ==========================================
+// Load Weather For A Location (shared pipeline)
+// ==========================================
+//
+// Used by: search submit, suggestion selection, recent-city clicks,
+// geolocation, and the initial default-city load. Centralizing this
+// avoids repeating the same loading/error/offline handling four times.
+
+async function loadWeatherForLocation(location, { saveToRecents = true } = {}) {
+    showLoading();
+    announce(`Loading weather for ${location.name}.`);
+    try {
+        const weatherData = await getWeather(
+            location.latitude,
+            location.longitude
+        );
+        renderWeather(location, weatherData);
+        hideOfflineBanner();
+        saveLastWeather(location, weatherData);
+        if (saveToRecents) {
+            saveRecentCity(location);
+        }
+        announce(`Weather loaded for ${location.name}${location.country ? ", " + location.country : ""}.`);
+    } catch (error) {
+        console.error("Weather request failed:", error);
+        const usedCache = tryShowCachedWeather(location, error);
+        if (!usedCache) {
+            showError(
+                error.message ||
+                "Something went wrong. Please try again."
+            );
+        }
+    } finally {
+        hideLoading();
+    }
+}
+
+// Falls back to the last successfully loaded weather when offline.
+function tryShowCachedWeather(attemptedLocation, error) {
+    const isLikelyOffline = !navigator.onLine || error instanceof TypeError;
+    if (!isLikelyOffline) return false;
+
+    const cached = getLastWeather();
+    if (!cached) return false;
+
+    renderWeather(cached.location, cached.weatherData);
+    showOfflineBanner(cached.location, cached.savedAt);
+    announce(
+        `You're offline. Showing saved weather for ${cached.location.name} ` +
+        `from ${formatSavedAt(cached.savedAt)}.`
+    );
+    return true;
 }
 
 // ==========================================
@@ -307,6 +384,8 @@ function renderWeather(location, weatherData) {
     currentWeatherData = weatherData;
 
     const current = weatherData.current;
+    const hourly = weatherData.hourly;
+    const daily = weatherData.daily;
     const weatherInfo = getWeatherInfo(current.weather_code);
     const startIndex = findCurrentHourIndex(hourly.time, current.time);
 
@@ -350,6 +429,13 @@ function renderWeather(location, weatherData) {
 
     sunriseEl.textContent = formatTime(daily.sunrise[0]);
     sunsetEl.textContent = formatTime(daily.sunset[0]);
+
+    // Hourly forecast + chart
+    displayHourly(hourly, startIndex);
+    renderChart(hourly, startIndex);
+
+    // 5-day forecast
+    displayForecast(daily);
 
     // Show dashboard
     weatherDashboard.classList.remove("hidden");
@@ -580,6 +666,7 @@ function showLoading() {
     weatherDashboard.classList.add("hidden");
     searchButton.disabled = true;
     searchButton.textContent = "Searching...";
+    geolocateButton.disabled = true;
     errorMessage.textContent = "";
 }
 
@@ -588,6 +675,7 @@ function hideLoading() {
     loading.classList.add("hidden");
     searchButton.disabled = false;
     searchButton.textContent = "Search";
+    geolocateButton.disabled = false;
 }
 
 // ==========================================
@@ -600,7 +688,7 @@ function showError(message) {
 }
 
 // ==========================================
-// LocalStorage
+// LocalStorage: Recently Searched Cities
 // ==========================================
 
 function getRecentCities() {
@@ -644,10 +732,14 @@ function saveRecentCity(location) {
     cities =
         cities.slice(0, MAX_RECENT_CITIES);
 
-    localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify(cities)
-    );
+    try {
+        localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify(cities)
+        );
+    } catch (error) {
+        console.error("Unable to save recent cities:", error);
+    }
 
     displayRecentCities();
 }
@@ -672,35 +764,47 @@ function displayRecentCities() {
         button.textContent = `${city.name}, ${city.country}`;
         button.addEventListener(
             "click",
-            () => loadRecentCity(city)
+            () => loadWeatherForLocation(city)
         );
         recentCities.appendChild(button);
     });
 }
 
 // ==========================================
-// Load Recent City
+// LocalStorage: Last Weather (offline fallback)
 // ==========================================
 
-async function loadRecentCity(city) {
-    showLoading();
+function saveLastWeather(location, weatherData) {
     try {
-        const weatherData = await getWeather(
-                city.latitude,
-                city.longitude
-            );
-        displayWeather(
-            city,
-            weatherData
-        );
+        localStorage.setItem(LAST_WEATHER_KEY, JSON.stringify({
+            location,
+            weatherData,
+            savedAt: new Date().toISOString()
+        }));
     } catch (error) {
-        console.error(error);
-        showError(
-            "Unable to load weather for this city."
-        );
-    } finally {
-        hideLoading();
+        console.error("Unable to cache weather for offline use:", error);
     }
+}
+
+function getLastWeather() {
+    try {
+        const saved = localStorage.getItem(LAST_WEATHER_KEY);
+        return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+        console.error("Unable to read cached weather:", error);
+        return null;
+    }
+}
+
+function showOfflineBanner(location, savedAtIso) {
+    offlineBanner.textContent =
+        `You're offline. Showing saved weather for ${location.name} ` +
+        `from ${formatSavedAt(savedAtIso)}.`;
+    offlineBanner.classList.remove("hidden");
+}
+
+function hideOfflineBanner() {
+    offlineBanner.classList.add("hidden");
 }
 
 // ==========================================
@@ -711,6 +815,7 @@ searchForm.addEventListener(
     "submit",
     async (event) => {
         event.preventDefault();
+        closeSuggestions();
         const city = cityInput.value.trim();
         if (!city) {
             showError(
@@ -720,37 +825,19 @@ searchForm.addEventListener(
         }
         showLoading();
         try {
-            // Step 1:
-            // Convert city name into coordinates
             const location = await searchCity(city);
-            // Step 2:
-            // Get weather using coordinates
-            const weatherData = await getWeather(
-                location.latitude,
-                location.longitude
-            );
-            // Step 3:
-            // Display weather
-            displayWeather(
-                location,
-                weatherData
-            );
-            // Step 4:
-            // Save city to LocalStorage
-            saveRecentCity(location);
-            // Clear search box
+            await loadWeatherForLocation(location);
             cityInput.value = "";
         } catch (error) {
             console.error(
-                "Weather request failed:",
+                "City search failed:",
                 error
             );
+            hideLoading();
             showError(
                 error.message ||
                 "Something went wrong. Please try again."
             );
-        } finally {
-            hideLoading();
         }
     }
 );
@@ -762,9 +849,11 @@ searchForm.addEventListener(
 clearHistoryButton.addEventListener(
     "click",
     () => {
-        localStorage.removeItem(
-            STORAGE_KEY
-        );
+        try {
+            localStorage.removeItem(STORAGE_KEY);
+        } catch (error) {
+            console.error("Unable to clear recent cities:", error);
+        }
         displayRecentCities();
     }
 );
@@ -948,40 +1037,79 @@ document.addEventListener("click", (event) => {
 });
 
 // ==========================================
+// Online / Offline Events
+// ==========================================
+
+window.addEventListener("offline", () => {
+    announce("You're offline. Some features may be limited.");
+});
+
+window.addEventListener("online", () => {
+    announce("You're back online.");
+    hideOfflineBanner();
+});
+
+// ==========================================
+// Progressive Web App: Install Prompt
+// ==========================================
+
+let deferredInstallPrompt = null;
+
+window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    installButton.classList.remove("hidden");
+});
+
+installButton.addEventListener("click", async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installButton.classList.add("hidden");
+});
+
+window.addEventListener("appinstalled", () => {
+    installButton.classList.add("hidden");
+    announce("Weather Dashboard installed.");
+});
+
+// ==========================================
+// Progressive Web App: Service Worker
+// ==========================================
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js").catch((error) => {
+            console.error("Service worker registration failed:", error);
+        });
+    });
+}
+
+// ==========================================
 // Initial Page Load
 // ==========================================
 
+initTheme();
+initUnit();
 displayRecentCities();
 
 // Automatically load Manila on first visit
 async function loadDefaultCity() {
-
-    const recentCities =
-        getRecentCities();
-    if (recentCities.length > 0) {
-        await loadRecentCity(
-            recentCities[0]
-        );
+    const recent = getRecentCities();
+    if (recent.length > 0) {
+        await loadWeatherForLocation(recent[0], { saveToRecents: false });
         return;
-    } try {
-        showLoading();
+    }
+    try {
         const location = await searchCity("Manila");
-        const weatherData = await getWeather(
-            location.latitude,
-            location.longitude
-        );
-        displayWeather(
-            location,
-            weatherData
-        );
-        saveRecentCity(location);
+        await loadWeatherForLocation(location);
     } catch (error) {
         console.error(error);
-        showError(
-            "Unable to load the default weather."
-        );
-    } finally {
-        hideLoading();
+        const usedCache = tryShowCachedWeather(null, error);
+        if (!usedCache) {
+            showError("Unable to load the default weather.");
+        }
     }
 }
 

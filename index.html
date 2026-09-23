@@ -4,19 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather Dashboard</title>
+
+    <meta name="description" content="Search any city for current conditions, an hourly outlook, and a 5-day forecast.">
+    <meta name="theme-color" content="#2648b8" id="theme-color-meta">
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+    <link rel="preconnect" href="https://api.open-meteo.com">
+    <link rel="preconnect" href="https://geocoding-api.open-meteo.com">
+
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <main class="container">
+    <a href="#main-content" class="skip-link">Skip to weather content</a>
 
+    <!-- Status messages for assistive tech: not visually shown, announced as they change -->
+    <div id="status-announcer" class="sr-only" role="status" aria-live="polite"></div>
+
+    <main class="container" id="main-content">
         <!-- Header -->
         <header class="header">
-            <div>
-                <p class="eyebrow">WEATHER DASHBOARD</p>
-                <h1>Weather Today</h1>
+            <div class="header-text">
+                <p class="eyebrow">Weather Dashboard</p>
+                <h1>Weather today</h1>
                 <p class="subtitle">
-                    Check the current weather and upcoming forecast.
+                    Check the current weather and upcoming forecast for any city.
                 </p>
             </div>
             <div class="header-controls">
@@ -33,8 +48,17 @@
                 >
                     <span id="theme-toggle-icon" aria-hidden="true">🌙</span>
                 </button>
+                <button type="button" id="install-button" class="icon-button install-button hidden" aria-label="Install this app">
+                    <span aria-hidden="true">⬇️</span>
+                    <span class="install-label">Install</span>
+                </button>
             </div>
         </header>
+
+        <!-- Offline / stale data banner -->
+        <p id="offline-banner" class="offline-banner hidden" role="status">
+            You're offline. Showing the last saved weather.
+        </p>
 
         <!-- Search -->
         <section class="search-section">
@@ -78,9 +102,9 @@
         </section>
 
         <!-- Recently Searched -->
-        <section class="recent-section">
+        <section class="recent-section" aria-label="Recently searched cities">
             <div class="section-heading">
-                <h2>Recently Searched</h2>
+                <h2>Recently searched</h2>
                 <button
                     id="clear-history"
                     class="clear-button"
@@ -97,7 +121,7 @@
         </section>
 
         <!-- Loading -->
-        <div id="loading" class="loading hidden">
+        <div id="loading" class="loading hidden" aria-hidden="true">
             <div class="spinner"></div>
             <p>Loading weather...</p>
         </div>
@@ -127,6 +151,7 @@
                 <p id="weather-condition" class="weather-condition">
                     Partly Cloudy
                 </p>
+
                 <div class="weather-details" id="weather-details">
                     <div class="detail">
                         <span class="detail-icon" aria-hidden="true">🌡️</span>
@@ -241,6 +266,7 @@
             Weather data provided by Open-Meteo
         </p>
     </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
