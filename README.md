@@ -334,13 +334,23 @@ Those coordinates are then used to request weather information.
 
 The Open-Meteo Forecast API is used to retrieve:
 
-* Current temperature
-* Relative humidity
+* Current temperature, feels-like temperature, and weather code
+* Relative humidity, precipitation, and pressure
 * Wind speed
-* Weather code
-* Daily maximum temperature
-* Daily minimum temperature
-* Daily weather codes
+* Hourly temperature, weather code, UV index, and visibility (for the
+  hourly forecast and chart)
+* Daily maximum/minimum temperature, weather code, sunrise, sunset,
+  and max UV index
+
+---
+
+### Reverse Geocoding API
+
+The **My location** feature uses BigDataCloud's free, keyless
+client-side reverse geocoding API to turn the browser's GPS
+coordinates into a city name. If it can't resolve a name, the app
+still fetches weather for the coordinates and simply labels the
+result "Current Location."
 
 ---
 
@@ -430,6 +440,16 @@ weather-dashboard/
 ├── index.html
 ├── styles.css
 ├── script.js
+├── manifest.webmanifest
+├── sw.js
+├── icons/
+│   ├── favicon-32.png
+│   ├── apple-touch-icon.png
+│   ├── icon-192.png
+│   ├── icon-512.png
+│   ├── icon-maskable-192.png
+│   └── icon-maskable-512.png
+├── images/
 └── README.md
 ```
 
@@ -490,6 +510,27 @@ Responsibilities include:
 ### `README.md`
 
 Provides documentation for the project.
+
+---
+
+### `manifest.webmanifest`
+
+Describes the app for installation: name, icons, colors, and display
+mode. Lets browsers offer "Add to Home Screen" / "Install".
+
+---
+
+### `sw.js`
+
+The service worker. Pre-caches the app shell on install and serves it
+when the network is unavailable, so the app still opens offline.
+
+---
+
+### `icons/`
+
+App icons used by the manifest and browser tab: a favicon, an Apple
+touch icon, and regular plus maskable icons at 192px and 512px.
 
 ---
 
@@ -945,104 +986,138 @@ This prevents the recently searched list from growing indefinitely.
 
 ## Future Improvements
 
-Several features could be added to make the project more advanced.
+The improvements originally listed here have now been implemented.
+Each one is described below, in the same order as the original list.
+
+---
 
 ### 1. Current Location
 
-Add browser geolocation support so users can automatically retrieve weather for their current location.
+Click **My location** next to the search field to request the browser's
+geolocation permission. The coordinates are reverse-geocoded (via the
+free BigDataCloud client-side API, no key required) into a city name,
+then handled through the same weather pipeline as a typed search.
+
+If location access is denied or unavailable, an inline error explains
+what happened instead of failing silently.
 
 ---
 
 ### 2. Temperature Unit Toggle
 
-Allow users to switch between:
-
-```text
-°C
-```
-
-and:
-
-```text
-°F
-```
+A `°C` / `°F` switch sits in the header. The choice is saved to
+`localStorage` and reapplied on the next visit. Switching units
+re-renders the current temperature, hourly forecast, chart, and 5-day
+forecast from the already-loaded data — no extra API call.
 
 ---
 
 ### 3. More Weather Details
 
-Additional information could include:
+The current-weather card now also shows:
 
 * Feels-like temperature
-* Sunrise
-* Sunset
-* UV index
+* Sunrise and sunset
+* UV index, with a Low / Moderate / High / Very High / Extreme label
 * Visibility
 * Precipitation
 * Pressure
+
+These come from Open-Meteo's `current`, `hourly`, and `daily` variables
+(`apparent_temperature`, `uv_index`, `visibility`, `precipitation`,
+`pressure_msl`, `sunrise`, `sunset`).
 
 ---
 
 ### 4. Hourly Forecast
 
-Add an hourly forecast for the next 24 hours.
+A horizontally scrollable row shows the next 24 hours, each with a
+time, icon, and temperature. The card for the current hour is labeled
+**Now** and visually highlighted.
 
 ---
 
 ### 5. Weather Charts
 
-Display temperature changes using a chart.
+The same 24-hour window is plotted as a temperature line chart,
+drawn as plain inline SVG (no charting library, so it stays fully
+self-contained and works offline). It includes a hidden text summary
+for screen readers.
 
 ---
 
 ### 6. Dark Mode
 
-Add a dark theme that users can toggle.
+A theme toggle in the header switches between light and dark palettes.
+The choice is saved to `localStorage`; if none is saved yet, the app
+follows the operating system's `prefers-color-scheme`.
 
 ---
 
 ### 7. Weather-Based Backgrounds
 
-Change the application's background based on the current weather.
-
-For example:
+The page background tints to match current conditions and day/night:
 
 ```text
-Sunny      → Bright background
-Rain       → Rain-themed background
-Snow       → Winter-themed background
-Thunder    → Storm-themed background
+Clear (day)    → Bright sky blue
+Clear (night)  → Deep indigo
+Cloudy / Fog   → Soft grey
+Rain           → Cool blue-grey
+Snow           → Pale ice blue
+Thunder        → Muted violet-grey
 ```
+
+Every combination of background and theme was checked against the
+app's text colors for WCAG AA contrast before being added.
 
 ---
 
 ### 8. Search Suggestions
 
-Add autocomplete suggestions while the user types a city name.
+Typing two or more characters into the search field queries the
+Open-Meteo geocoding API (debounced, with in-flight requests cancelled
+via `AbortController`) and shows up to five matching cities with their
+region and country. The field is built as an accessible combobox:
+arrow keys move through the list, Enter selects, Escape closes, and
+the active option is announced through `aria-activedescendant`.
 
 ---
 
 ### 9. Better Accessibility
 
-Further improve accessibility by adding:
+Beyond the combobox pattern above:
 
-* More descriptive ARIA labels
-* Improved keyboard navigation
-* Screen-reader announcements for loading states
-* Improved color contrast
+* A skip link jumps straight to the weather content.
+* A visually hidden `aria-live` region announces loading, success,
+  offline, and location-request states for screen reader users,
+  separate from the visible (and `role="alert"`) error message.
+* All icon-only buttons (unit toggle, theme toggle, install, My
+  location) have descriptive `aria-label`s, and toggles expose
+  `aria-pressed`.
+* Visible focus outlines are used throughout instead of suppressing
+  the browser default.
+* Every text/background pairing, including the weather-based
+  backgrounds and both themes, was checked for WCAG AA contrast.
+* `prefers-reduced-motion` is respected by shortening animations.
 
 ---
 
 ### 10. Progressive Web App
 
-The project could eventually be converted into a PWA with:
+The app now ships with:
 
-* Installable application
-* Offline support
-* Service worker
-* Cached weather data
+* A `manifest.webmanifest` (installable, with regular and maskable
+  icons) so it can be added to the home screen or app dock.
+* An install button that appears when the browser's
+  `beforeinstallprompt` fires.
+* A service worker (`sw.js`) that pre-caches the app shell (HTML, CSS,
+  JS, icons) so the interface still loads offline.
+* Cached weather: the most recently loaded weather is saved to
+  `localStorage`. If a later request fails while offline, the app
+  shows that saved weather with a banner noting when it was saved,
+  instead of just showing an error.
 
----
+
 
 ## What I Learned
 
