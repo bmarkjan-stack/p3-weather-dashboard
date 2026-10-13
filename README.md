@@ -1,536 +1,105 @@
 # Weather Dashboard
 
-A responsive weather dashboard built with **HTML, CSS, and vanilla JavaScript** that consumes the **Open-Meteo REST API** to display current weather conditions and a 5-day forecast.
+A responsive, installable weather dashboard built with **HTML, CSS, and vanilla JavaScript**. Search any city to see current conditions, the next 24 hours, a temperature chart, and a 5-day forecast. It works without a build step, a backend, or an API key.
 
-The application allows users to search for cities, view current weather information, browse upcoming forecasts, and quickly access recently searched cities. Recent searches are persisted using the browser's `localStorage`.
+![Weather Dashboard showing Bulacan, Philippines: thunderstorm, 31°C, with recent searches and the current-conditions details](images/p3-1.1.png)
 
 ---
 
 ## Table of Contents
 
-* [Overview](#overview)
-* [Features](#features)
-* [Demo](#demo)
-* [Technologies Used](#technologies-used)
-* [APIs Used](#apis-used)
-* [How It Works](#how-it-works)
-* [Project Structure](#project-structure)
-* [Getting Started](#getting-started)
-* [Usage](#usage)
-* [Weather Information](#weather-information)
-* [Recently Searched Cities](#recently-searched-cities)
-* [Loading and Error Handling](#loading-and-error-handling)
-* [Responsive Design](#responsive-design)
-* [JavaScript Concepts Demonstrated](#javascript-concepts-demonstrated)
-* [API Request Flow](#api-request-flow)
-* [LocalStorage](#localstorage)
-* [Future Improvements](#future-improvements)
-* [What I Learned](#what-i-learned)
-* [Portfolio Value](#portfolio-value)
-* [Credits](#credits)
-* [License](#license)
-
----
-
-## Overview
-
-The **Weather Dashboard** is a frontend web application that retrieves real-time weather information from a public weather API.
-
-Users can enter a city name, and the application:
-
-1. Searches for the city using the Open-Meteo Geocoding API.
-2. Retrieves the city's latitude and longitude.
-3. Uses those coordinates to request weather information.
-4. Displays the current weather conditions.
-5. Displays a 5-day weather forecast.
-6. Saves the city to a list of recently searched cities.
-7. Stores recent searches in `localStorage` so they remain available after refreshing the page.
-
-The project was created to demonstrate practical JavaScript skills including **API consumption, asynchronous programming, DOM manipulation, error handling, and browser storage**.
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [How It Works](#how-it-works)
+- [Data Sources](#data-sources)
+- [Project Structure](#project-structure)
+- [Browser Storage](#browser-storage)
+- [Accessibility](#accessibility)
+- [Offline and PWA Support](#offline-and-pwa-support)
+- [Browser Support](#browser-support)
+- [Credits](#credits)
+- [License](#license)
+- [Author](#author)
 
 ---
 
 ## Features
 
-### City Search
+### Search and suggestions
 
-Users can search for a city using the search form.
+- Search for any city by name. Typing two or more characters shows up to five matching cities with their region and country.
+- Suggestions are fetched with a 250 ms debounce, and any in-flight request is cancelled (`AbortController`) when a newer one starts.
+- Keyboard support follows the accessible combobox pattern: **↑/↓** to move, **Enter** to select, **Esc** to close.
+- **My location** uses the browser's geolocation. Coordinates are converted to a city name, or the result is labelled "Current Location" if no name can be found.
 
-Examples:
+### Current conditions
 
-```text
-Manila
-Tokyo
-London
-New York
-Toronto
-Sydney
-```
+- Temperature, with a **°C / °F** toggle that re-renders from the loaded data without another API call.
+- A condition label and icon (for example, ☀️ Clear Sky or ⛈️ Thunderstorm), translated from Open-Meteo weather codes.
+- Feels-like temperature, humidity, wind speed, precipitation, pressure, visibility, UV index (with a Low / Moderate / High / Very High / Extreme label), sunrise, and sunset.
 
-The application converts the city name into geographic coordinates before requesting the weather information.
+### Hourly forecast and chart
 
----
+- A horizontally scrollable row of the next 24 hours. The current hour is labelled **Now** and highlighted.
+- A temperature trend chart for the same 24-hour window. It is plain inline SVG, so no charting library is needed. A text summary is provided for screen readers.
 
-### Current Temperature
+### 5-day forecast
 
-The dashboard displays the current temperature in Celsius.
+- Day, icon, condition, and high/low temperatures for the next five days.
+- The grid adjusts its column count to the screen width.
 
-Example:
+### Recent searches
 
-```text
-31°C
-```
+- The last five successful searches appear as buttons. Click one to reload its weather.
+- **Clear** removes the history.
+- On a return visit, the most recent city loads automatically. On a first visit, Manila is shown.
 
----
+### Personalization
 
-### Weather Condition
+- **Dark mode:** a header toggle switches between light and dark themes. The choice is saved, and if none is saved yet the app follows the OS `prefers-color-scheme` setting.
+- **Weather-based backgrounds:** the page tint changes with the current conditions and day or night (for example, clear-day sky blue, clear-night indigo, rain blue-grey, thunder muted violet-grey).
 
-The application displays a human-readable weather condition along with an appropriate weather emoji.
+### Works offline
 
-Examples:
+- The app shell is cached by a service worker, so it still opens without a connection.
+- The last successful weather response is saved. If a later request fails while offline, that saved weather is shown with a banner that says when it was saved.
+- The app can be installed to the home screen or dock where the browser supports it.
 
-```text
-☀️ Clear Sky
-⛅ Partly Cloudy
-☁️ Overcast
-🌧️ Moderate Rain
-⛈️ Thunderstorm
-```
+### Screenshots
 
----
+Each city has two screenshots: the top of the page (current conditions) and the lower half (hourly forecast, temperature trend, and 5-day forecast).
 
-### Humidity
+**Bulacan, Philippines**, during a thunderstorm at 31°C
 
-The current relative humidity is displayed as a percentage.
+![Bulacan, Philippines: current conditions and details](images/p3-1.1.png)
+![Bulacan, Philippines: hourly forecast, temperature trend, and 5-day forecast](images/p3-1.2.png)
 
-Example:
+**Los Angeles, United States**, clear sky at 14°C
 
-```text
-Humidity
-72%
-```
+![Los Angeles, United States: current conditions and details](images/p3-2.1.png)
+![Los Angeles, United States: hourly forecast, temperature trend, and 5-day forecast](images/p3-2.2.png)
 
----
+**Tokyo, Japan**, mainly clear at 23°C
 
-### Wind Speed
-
-The current wind speed is displayed in kilometers per hour.
-
-Example:
-
-```text
-Wind
-14 km/h
-```
+![Tokyo, Japan: current conditions and details](images/p3-3.1.png)
+![Tokyo, Japan: hourly forecast, temperature trend, and 5-day forecast](images/p3-3.2.png)
 
 ---
 
-### 5-Day Forecast
-
-The dashboard displays weather information for the next five days.
-
-Each forecast includes:
-
-* Day
-* Weather icon
-* Weather condition
-* Maximum temperature
-* Minimum temperature
-
-Example:
-
-```text
-Today
-☀️
-Clear Sky
-31° / 26°
-
-Tomorrow
-⛅
-Partly Cloudy
-32° / 27°
-```
-
----
-
-### Loading State
-
-The application displays a loading indicator while weather information is being retrieved.
-
-This provides visual feedback to the user while asynchronous API requests are being processed.
-
----
-
-### Error Handling
-
-The application handles several possible errors, including:
-
-* Empty city searches
-* Cities that cannot be found
-* Failed API requests
-* Weather data retrieval errors
-* LocalStorage errors
-
-Example:
-
-```text
-City "ExampleCity" could not be found.
-```
-
----
-
-### Recently Searched Cities
-
-The application stores recently searched cities.
-
-The most recent searches appear as clickable buttons.
-
-For example:
-
-```text
-Manila, Philippines
-Tokyo, Japan
-Toronto, Canada
-London, United Kingdom
-```
-
-Clicking a recently searched city loads its weather without requiring the user to type the city again.
-
-The application stores up to **five recent cities**.
-
----
-
-### LocalStorage
-
-Recently searched cities are saved using the browser's `localStorage`.
-
-This means the search history remains available after:
-
-* Refreshing the page
-* Closing and reopening the browser
-* Returning to the application later
-
-Users can also clear their search history using the **Clear** button.
-
----
-
-### Responsive Design
-
-The interface is designed to work across different screen sizes.
-
-Supported layouts include:
-
-* Desktop
-* Laptop
-* Tablet
-* Mobile phone
-
-The forecast layout automatically changes depending on the available screen width.
-
----
-
-## Demo
-
-Check out my portfolio browser for the application screenshots!
-
-```text
-URL: https://bmarkjan-stack.github.io
-```
-
-## Desktop
-
-![Weather Dashboard Desktop Screenshot 1](images/p3-1.png)
-![Weather Dashboard Desktop Screenshot 2](images/p3-2.png)
-![Weather Dashboard Desktop Screenshot 3](images/p3-3.png)
-![Weather Dashboard Desktop Screenshot 4](images/p3-4.png)
-
----
-
-## Technologies Used
-
-### HTML5
-
-Used to create the structure and semantic elements of the application.
-
-Key concepts:
-
-* Semantic HTML
-* Forms
-* Buttons
-* Sections
-* Accessibility labels
-* HTML attributes
-
----
-
-### CSS3
-
-Used to create the visual design and responsive layout.
-
-Key concepts:
-
-* CSS Grid
-* Flexbox
-* Media queries
-* CSS animations
-* Responsive typography
-* Transitions
-* Shadows
-* Gradients
-* Responsive layouts
-
----
-
-### JavaScript
-
-JavaScript powers the application's functionality.
-
-The project uses:
-
-* Variables
-* Functions
-* Arrays
-* Objects
-* Template literals
-* DOM manipulation
-* Event listeners
-* `fetch()`
-* Promises
-* `async/await`
-* JSON
-* Error handling
-* LocalStorage
-
----
-
-## APIs Used
-
-This project uses the **Open-Meteo API**.
-
-Open-Meteo provides weather information without requiring an API key for this project.
-
-### Geocoding API
-
-The application uses the Open-Meteo Geocoding API to convert a city name into geographic coordinates.
-
-Example:
-
-```text
-Manila
-```
-
-becomes approximately:
-
-```text
-Latitude: 14.5995
-Longitude: 120.9842
-```
-
-Those coordinates are then used to request weather information.
-
----
-
-### Weather API
-
-The Open-Meteo Forecast API is used to retrieve:
-
-* Current temperature, feels-like temperature, and weather code
-* Relative humidity, precipitation, and pressure
-* Wind speed
-* Hourly temperature, weather code, UV index, and visibility (for the
-  hourly forecast and chart)
-* Daily maximum/minimum temperature, weather code, sunrise, sunset,
-  and max UV index
-
----
-
-### Reverse Geocoding API
-
-The **My location** feature uses BigDataCloud's free, keyless
-client-side reverse geocoding API to turn the browser's GPS
-coordinates into a city name. If it can't resolve a name, the app
-still fetches weather for the coordinates and simply labels the
-result "Current Location."
-
----
-
-## How It Works
-
-The application follows a two-step API process.
-
-### Step 1 — Search for the City
-
-When the user enters:
-
-```text
-Manila
-```
-
-JavaScript sends a request to the geocoding API.
-
-```javascript
-const response = await fetch(url);
-```
-
-The response is converted from JSON:
-
-```javascript
-const data = await response.json();
-```
-
-The application retrieves the city's geographic information.
-
----
-
-### Step 2 — Retrieve Weather
-
-The latitude and longitude are then passed to the weather API.
-
-```javascript
-const weatherData = await getWeather(
-    location.latitude,
-    location.longitude
-);
-```
-
-The weather API returns JSON containing the current weather and forecast.
-
----
-
-### Step 3 — Display the Data
-
-JavaScript processes the API response and updates the HTML elements.
-
-For example:
-
-```javascript
-currentTemperature.textContent =
-    Math.round(current.temperature_2m);
-```
-
-The forecast cards are generated dynamically:
-
-```javascript
-const forecastCard =
-    document.createElement("article");
-```
-
----
-
-### Step 4 — Save the Search
-
-After a successful search, the city is stored in `localStorage`.
-
-```javascript
-localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(cities)
-);
-```
-
-This allows the application to remember recently searched cities.
-
----
-
-## Project Structure
-
-```text
-weather-dashboard/
-│
-├── index.html
-├── styles.css
-├── script.js
-├── manifest.webmanifest
-├── sw.js
-├── icons/
-│   ├── favicon-32.png
-│   ├── apple-touch-icon.png
-│   ├── icon-192.png
-│   ├── icon-512.png
-│   ├── icon-maskable-192.png
-│   └── icon-maskable-512.png
-├── images/
-└── README.md
-```
-
-### `index.html`
-
-Contains the application's structure.
-
-It includes:
-
-* Header
-* Search form
-* Error message
-* Recently searched cities
-* Loading indicator
-* Current weather section
-* Weather details
-* Forecast section
-* Footer
-
----
-
-### `styles.css`
-
-Contains all visual styling.
-
-It controls:
-
-* Page layout
-* Colors
-* Typography
-* Weather cards
-* Search form
-* Forecast cards
-* Loading spinner
-* Responsive layouts
-* Mobile styling
-
----
-
-### `script.js`
-
-Contains the application's functionality.
-
-Responsibilities include:
-
-* Searching for cities
-* Calling APIs
-* Processing JSON
-* Displaying weather
-* Generating forecasts
-* Handling loading states
-* Handling errors
-* Managing recent searches
-* Using LocalStorage
-
----
-
-### `README.md`
-
-Provides documentation for the project.
-
----
-
-### `manifest.webmanifest`
-
-Describes the app for installation: name, icons, colors, and display
-mode. Lets browsers offer "Add to Home Screen" / "Install".
-
----
-
-### `sw.js`
-
-The service worker. Pre-caches the app shell on install and serves it
-when the network is unavailable, so the app still opens offline.
-
----
-
-### `icons/`
-
-App icons used by the manifest and browser tab: a favicon, an Apple
-touch icon, and regular plus maskable icons at 192px and 512px.
+## Tech Stack
+
+| Layer | What is used |
+| --- | --- |
+| Markup | Semantic HTML5, ARIA combobox and live-region patterns |
+| Styling | CSS custom properties, Grid and Flexbox, media queries, `prefers-reduced-motion` |
+| Logic | Vanilla JavaScript (ES2017+): `async`/`await`, `fetch`, `AbortController`, template literals |
+| Storage | `localStorage` |
+| PWA | Web App Manifest, Service Worker, `beforeinstallprompt` |
+| Data | [Open-Meteo](https://open-meteo.com/) (forecast and geocoding), [BigDataCloud](https://www.bigdatacloud.com/) (reverse geocoding) |
+
+There are no frameworks, bundlers, or npm dependencies.
 
 ---
 
@@ -538,698 +107,239 @@ touch icon, and regular plus maskable icons at 192px and 512px.
 
 ### Prerequisites
 
-You only need:
+- A modern browser (see [Browser Support](#browser-support))
+- An internet connection for live weather data
+- Optional: a local static server, such as the VS Code **Live Server** extension
 
-* A modern web browser
-* VS Code or another code editor
-* Internet connection
+No API key or backend is required.
 
-No backend server or API key is required.
-
----
-
-## Installation
-
-### 1. Clone the Repository
-
-Clone the GitHub repository:
+### Clone the repository
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/weather-dashboard.git
+git clone https://github.com/bmarkjan-stack/p3-weather-dashboard.git
+cd p3-weather-dashboard
 ```
 
----
+### Run it
 
-### 2. Navigate Into the Project
+You can open `index.html` directly, but a local server is recommended. The service worker and geolocation features only work on `http://localhost` or HTTPS, not on `file://`.
+
+**Option A: VS Code Live Server**
+
+1. Open the folder in VS Code.
+2. Install the **Live Server** extension if you do not have it.
+3. Right-click `index.html` and choose **Open with Live Server**.
+
+**Option B: Python**
 
 ```bash
-cd weather-dashboard
+python3 -m http.server 8080
 ```
 
----
+Then open http://localhost:8080.
 
-### 3. Open the Project in VS Code
+**Option C: Node**
 
 ```bash
-code .
+npx serve .
 ```
-
-If the `code` command is unavailable, open VS Code manually and select:
-
-```text
-File → Open Folder
-```
-
-Then select the `weather-dashboard` folder.
-
----
-
-## Running the Project
-
-Because this is a frontend project, you can run it using a local development server.
-
-### Using VS Code Live Server
-
-If you have the **Live Server** extension installed:
-
-1. Open `index.html`.
-2. Right-click inside the file.
-3. Select **Open with Live Server**.
-4. Your browser will open the application.
-
-You can then search for cities and test the weather dashboard.
 
 ---
 
 ## Usage
 
-### Search for a City
+1. **Search:** type a city, optionally with a country (for example, `Manila, Philippines`), then press **Search** or **Enter**. Pick a suggestion with the arrow keys or the mouse.
+2. **Use your location:** press **My location** and allow the browser prompt.
+3. **Switch units:** press **°C** or **°F** in the header.
+4. **Switch theme:** press the moon or sun icon in the header.
+5. **Revisit a city:** press a button under **Recently searched**.
+6. **Clear history:** press **Clear** next to **Recently searched**.
 
-Enter a city into the search field.
+---
 
-Example:
+## How It Works
+
+A search runs as a short pipeline:
 
 ```text
-Manila
+City name ──► Geocoding API ──► latitude / longitude ──► Forecast API ──► render ──► save
 ```
 
-Click:
+1. **Geocode.** `searchCity()` calls the Open-Meteo Geocoding API and takes the first result.
+2. **Fetch weather.** `getWeather()` requests current, hourly, and daily variables for those coordinates.
+3. **Render.** `renderWeather()` fills the current-conditions card, then calls `displayHourly()`, `renderChart()`, and `displayForecast()`.
+4. **Save.** On success, the city is added to the recent list and the response is cached for offline use.
+
+All of this runs through one shared function, `loadWeatherForLocation()`. Search submit, suggestion selection, recent-city clicks, geolocation, and the default city load all use it, so loading, error, and offline handling is consistent.
+
+### Loading and errors
+
+- `showLoading()` shows the spinner, hides the dashboard, and disables the search and location buttons.
+- Errors are shown in an inline `role="alert"` message. Examples include an empty search, a city that cannot be found, a failed request, or denied location access.
+- If the request fails because the browser is offline, the app falls back to the saved weather when there is any.
+
+---
+
+## Data Sources
+
+### Open-Meteo Geocoding API
+
+Turns a city name into coordinates.
 
 ```text
-Search
+https://geocoding-api.open-meteo.com/v1/search?name=Manila&count=1
 ```
 
-The application will retrieve and display the weather.
+### Open-Meteo Forecast API
+
+Requested variables:
+
+- **Current:** `temperature_2m`, `relative_humidity_2m`, `apparent_temperature`, `is_day`, `precipitation`, `pressure_msl`, `weather_code`, `wind_speed_10m`
+- **Hourly:** `temperature_2m`, `weather_code`, `uv_index`, `visibility`
+- **Daily (6 days):** `weather_code`, `temperature_2m_max`, `temperature_2m_min`, `sunrise`, `sunset`, `uv_index_max`
+
+The request uses `timezone=auto`, so times are shown in the searched city's local time. The API is asked for six days so the 24-hour window is complete even late in the day. Only five days are displayed.
+
+### BigDataCloud reverse geocoding
+
+Used only by **My location** to convert GPS coordinates into a city and country name. It is a free, keyless, client-side endpoint.
+
+### Weather codes
+
+Open-Meteo returns WMO weather codes. `getWeatherInfo()` in `script.js` maps each code to a label, an emoji, and a background group. A few examples:
+
+| Code | Condition | Icon |
+| ---: | --- | --- |
+| 0 | Clear Sky | ☀️ |
+| 1 | Mainly Clear | 🌤️ |
+| 2 | Partly Cloudy | ⛅ |
+| 3 | Overcast | ☁️ |
+| 45 | Fog | 🌫️ |
+| 61 | Slight Rain | 🌦️ |
+| 63 | Moderate Rain | 🌧️ |
+| 75 | Heavy Snow | ❄️ |
+| 82 | Violent Rain Showers | ⛈️ |
+| 95 | Thunderstorm | ⛈️ |
+
+The full table covers every code Open-Meteo documents for these variables. Unknown codes fall back to "Unknown" with a thermometer icon.
 
 ---
 
-### Search for Another City
-
-You can search for another location at any time.
-
-For example:
+## Project Structure
 
 ```text
-Tokyo
+p3-weather-dashboard/
+├── index.html             Page structure, ARIA labels, and the skip link
+├── styles.css             Layout, theme tokens, weather backgrounds, responsive rules
+├── script.js              API calls, rendering, suggestions, storage, geolocation, PWA hooks
+├── sw.js                  Service worker: app-shell cache and offline fallback
+├── manifest.webmanifest   Name, icons, colors, and display mode for installation
+├── icons/                 Favicon, Apple touch icon, and 192/512 px regular and maskable icons
+├── images/                Screenshots used in this README
+└── README.md
 ```
 
-The current weather and forecast will update.
+### `index.html`
+
+Contains the header with unit and theme controls, the search form with the suggestions list, the recent-cities section, the loading indicator, the offline banner, and the weather sections. A screen-reader-only live region announces status changes.
+
+### `script.js`
+
+Organized into sections marked with comment headers:
+
+- Configuration: API URLs, storage keys, limits
+- DOM references
+- Weather code mapping
+- Units and theme
+- Search, suggestions, and reverse geocoding
+- Weather request and rendering (current, hourly, chart, daily)
+- Recent-city and last-weather storage
+- Form, clear, geolocation, and install handlers
+- Service worker registration and initial page load
+
+### `styles.css`
+
+Defines colors as custom properties on `:root`, with a dark palette under `[data-theme="dark"]` and background tints under `[data-weather]`. Responsive breakpoints are at 800 px, 600 px, and 400 px. The stylesheet also respects `prefers-reduced-motion`.
+
+### `sw.js`
+
+- **Install:** pre-caches the app shell (HTML, CSS, JS, manifest, and icons).
+- **Activate:** deletes older shell caches.
+- **Fetch:** page navigations use network-first with a cached fallback. Other same-origin GET requests use stale-while-revalidate. Cross-origin API calls are not intercepted.
+
+When you change any shell file, bump `VERSION` in `sw.js` so returning users receive the new files.
 
 ---
 
-### Use Recent Searches
+## Browser Storage
 
-Previously searched cities appear under:
+All keys use the `weatherDashboard` prefix.
 
-```text
-Recently Searched
-```
+| Key | Contents | Purpose |
+| --- | --- | --- |
+| `weatherDashboardRecentCities` | Array of up to 5 `{ name, country, latitude, longitude }` | Recent-search buttons |
+| `weatherDashboardUnit` | `"C"` or `"F"` | Temperature unit |
+| `weatherDashboardTheme` | `"light"` or `"dark"` | Theme choice. If unset, the OS preference is used. |
+| `weatherDashboardLastWeather` | `{ location, weatherData, savedAt }` | Offline fallback |
 
-Clicking a city automatically retrieves its weather information.
-
----
-
-### Clear Search History
-
-Click:
-
-```text
-Clear
-```
-
-to remove all recently searched cities from LocalStorage.
+Every read and write is wrapped in `try/catch`. If storage is blocked, for example in some private-browsing modes, the app still works and logs the error to the console.
 
 ---
 
-## Weather Information
+## Accessibility
 
-The application interprets Open-Meteo weather codes and converts them into readable weather conditions.
-
-Examples include:
-
-| Weather Code | Condition            | Icon |
-| -----------: | -------------------- | ---- |
-|            0 | Clear Sky            | ☀️   |
-|            1 | Mainly Clear         | 🌤️  |
-|            2 | Partly Cloudy        | ⛅    |
-|            3 | Overcast             | ☁️   |
-|           45 | Fog                  | 🌫️  |
-|           51 | Light Drizzle        | 🌦️  |
-|           61 | Slight Rain          | 🌦️  |
-|           63 | Moderate Rain        | 🌧️  |
-|           65 | Heavy Rain           | 🌧️  |
-|           71 | Slight Snow          | 🌨️  |
-|           75 | Heavy Snow           | ❄️   |
-|           80 | Rain Showers         | 🌦️  |
-|           82 | Violent Rain Showers | ⛈️   |
-|           95 | Thunderstorm         | ⛈️   |
-
-This conversion is handled by the `getWeatherInfo()` function in `script.js`.
+- A skip link jumps past the header to the weather content.
+- The city field is an ARIA combobox (`aria-expanded`, `aria-activedescendant`, `aria-controls`) with full keyboard support.
+- A visually hidden `aria-live` region announces loading, success, offline, and location states. Errors use a separate `role="alert"` element.
+- Icon-only buttons have `aria-label`s. Toggle buttons expose `aria-pressed`.
+- Focus outlines are visible throughout.
+- Text and background colors, including each weather-based background in both themes, were checked against WCAG AA contrast.
+- Animations are shortened when `prefers-reduced-motion` is set.
 
 ---
 
-## Loading and Error Handling
+## Offline and PWA Support
 
-API requests can take time or fail.
+- **Installable:** the manifest provides regular and maskable icons. An **Install** button appears when the browser fires `beforeinstallprompt`.
+- **App shell cache:** the interface loads offline after the first visit.
+- **Last-weather fallback:** if a request fails offline, the saved weather is shown with a banner, instead of only an error message.
+- **Online and offline events:** the banner is hidden when the connection returns.
 
-The application therefore provides feedback to the user.
-
-### Loading
-
-When an API request starts:
-
-```javascript
-showLoading();
-```
-
-The dashboard is hidden and a loading spinner is displayed.
-
-The search button is also disabled temporarily.
+Weather data is never cached by the service worker. Freshness is controlled by the app's own saved copy.
 
 ---
 
-### Successful Request
+## Browser Support
 
-After the API request succeeds:
-
-```javascript
-displayWeather(
-    location,
-    weatherData
-);
-```
-
-The weather dashboard is displayed.
+Any current version of Chrome, Edge, Firefox, Safari, or their mobile equivalents should work. The app uses modern features, including `async`/`await`, `AbortController`, CSS custom properties, and the Geolocation API. Internet Explorer is not supported.
 
 ---
 
-### Failed Request
-
-If something goes wrong:
-
-```javascript
-catch (error) {
-    showError(error.message);
-}
-```
-
-The application displays an appropriate error message instead of crashing.
-
----
-
-## Responsive Design
-
-The application uses CSS media queries to adapt the layout.
-
-### Desktop
-
-The 5-day forecast is displayed in a row:
-
-```text
-┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐
-│ Today  │ │ Tue    │ │ Wed    │ │ Thu    │ │ Fri    │
-└────────┘ └────────┘ └────────┘ └────────┘ └────────┘
-```
-
-### Tablet
-
-The forecast automatically wraps into multiple rows.
-
-### Mobile
-
-The layout changes to accommodate smaller screens.
-
-The search form becomes vertical:
-
-```text
-┌──────────────────────────┐
-│ Search for a city...     │
-└──────────────────────────┘
-┌──────────────────────────┐
-│ Search                   │
-└──────────────────────────┘
-```
-
----
-
-## JavaScript Concepts Demonstrated
-
-This project was specifically designed to demonstrate practical JavaScript development skills.
-
-### `fetch()`
-
-The application uses `fetch()` to communicate with external APIs.
-
-```javascript
-const response = await fetch(url);
-```
-
----
-
-### REST APIs
-
-The project communicates with REST endpoints to retrieve geographic and weather data.
-
----
-
-### Promises
-
-API requests return promises, which are handled using `async/await`.
-
----
-
-### `async/await`
-
-The application uses asynchronous functions:
-
-```javascript
-async function getWeather(latitude, longitude) {
-    const response = await fetch(url);
-
-    return await response.json();
-}
-```
-
-This makes asynchronous code easier to read and maintain.
-
----
-
-### JSON
-
-API responses are converted into JavaScript objects:
-
-```javascript
-const data = await response.json();
-```
-
-The application then accesses properties from those objects.
-
----
-
-### DOM Manipulation
-
-JavaScript dynamically updates the page:
-
-```javascript
-temperatureElement.textContent = temperature;
-```
-
-Forecast cards are also generated dynamically.
-
----
-
-### Event Listeners
-
-The application responds to user interactions.
-
-For example:
-
-```javascript
-searchForm.addEventListener(
-    "submit",
-    async (event) => {
-        // ...
-    }
-);
-```
-
-Recent city buttons also receive click event listeners.
-
----
-
-### Error Handling
-
-The application uses `try...catch...finally`:
-
-```javascript
-try {
-    // API request
-} catch (error) {
-    // Handle error
-} finally {
-    // Stop loading
-}
-```
-
-This demonstrates how real applications handle unreliable network requests.
-
----
-
-### LocalStorage
-
-The project uses browser storage:
-
-```javascript
-localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify(cities)
-);
-```
-
-and:
-
-```javascript
-localStorage.getItem(STORAGE_KEY);
-```
-
-This allows data to persist between sessions.
-
----
-
-## API Request Flow
-
-The complete request process is:
-
-```text
-┌───────────────────────┐
-│ User enters city      │
-│ "Manila"              │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ Geocoding API         │
-│ Search city           │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ Latitude / Longitude  │
-│ 14.x / 120.x          │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ Weather API           │
-│ Current + Forecast    │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ JSON Response         │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ JavaScript            │
-│ Processes Data        │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ DOM Updated            │
-│ Weather Dashboard      │
-└───────────┬───────────┘
-            │
-            ▼
-┌───────────────────────┐
-│ City saved to          │
-│ LocalStorage           │
-└───────────────────────┘
-```
-
----
-
-## LocalStorage
-
-The application uses the following storage key:
-
-```javascript
-const STORAGE_KEY =
-    "weatherDashboardRecentCities";
-```
-
-The stored data is an array of city objects.
-
-Conceptually, it looks like:
-
-```json
-[
-    {
-        "name": "Manila",
-        "country": "Philippines",
-        "latitude": 14.5995,
-        "longitude": 120.9842
-    }
-]
-```
-
-The application limits the history to five cities.
-
-```javascript
-cities = cities.slice(0, MAX_RECENT_CITIES);
-```
-
-This prevents the recently searched list from growing indefinitely.
-
----
-
-## Future Improvements
-
-The improvements originally listed here have now been implemented.
-Each one is described below, in the same order as the original list.
-
----
-
-### 1. Current Location
-
-Click **My location** next to the search field to request the browser's
-geolocation permission. The coordinates are reverse-geocoded (via the
-free BigDataCloud client-side API, no key required) into a city name,
-then handled through the same weather pipeline as a typed search.
-
-If location access is denied or unavailable, an inline error explains
-what happened instead of failing silently.
-
----
-
-### 2. Temperature Unit Toggle
-
-A `°C` / `°F` switch sits in the header. The choice is saved to
-`localStorage` and reapplied on the next visit. Switching units
-re-renders the current temperature, hourly forecast, chart, and 5-day
-forecast from the already-loaded data — no extra API call.
-
----
-
-### 3. More Weather Details
-
-The current-weather card now also shows:
-
-* Feels-like temperature
-* Sunrise and sunset
-* UV index, with a Low / Moderate / High / Very High / Extreme label
-* Visibility
-* Precipitation
-* Pressure
-
-These come from Open-Meteo's `current`, `hourly`, and `daily` variables
-(`apparent_temperature`, `uv_index`, `visibility`, `precipitation`,
-`pressure_msl`, `sunrise`, `sunset`).
-
----
-
-### 4. Hourly Forecast
-
-A horizontally scrollable row shows the next 24 hours, each with a
-time, icon, and temperature. The card for the current hour is labeled
-**Now** and visually highlighted.
-
----
-
-### 5. Weather Charts
-
-The same 24-hour window is plotted as a temperature line chart,
-drawn as plain inline SVG (no charting library, so it stays fully
-self-contained and works offline). It includes a hidden text summary
-for screen readers.
-
----
-
-### 6. Dark Mode
-
-A theme toggle in the header switches between light and dark palettes.
-The choice is saved to `localStorage`; if none is saved yet, the app
-follows the operating system's `prefers-color-scheme`.
-
----
-
-### 7. Weather-Based Backgrounds
-
-The page background tints to match current conditions and day/night:
-
-```text
-Clear (day)    → Bright sky blue
-Clear (night)  → Deep indigo
-Cloudy / Fog   → Soft grey
-Rain           → Cool blue-grey
-Snow           → Pale ice blue
-Thunder        → Muted violet-grey
-```
-
-Every combination of background and theme was checked against the
-app's text colors for WCAG AA contrast before being added.
-
----
-
-### 8. Search Suggestions
-
-Typing two or more characters into the search field queries the
-Open-Meteo geocoding API (debounced, with in-flight requests cancelled
-via `AbortController`) and shows up to five matching cities with their
-region and country. The field is built as an accessible combobox:
-arrow keys move through the list, Enter selects, Escape closes, and
-the active option is announced through `aria-activedescendant`.
-
----
-
-### 9. Better Accessibility
-
-Beyond the combobox pattern above:
-
-* A skip link jumps straight to the weather content.
-* A visually hidden `aria-live` region announces loading, success,
-  offline, and location-request states for screen reader users,
-  separate from the visible (and `role="alert"`) error message.
-* All icon-only buttons (unit toggle, theme toggle, install, My
-  location) have descriptive `aria-label`s, and toggles expose
-  `aria-pressed`.
-* Visible focus outlines are used throughout instead of suppressing
-  the browser default.
-* Every text/background pairing, including the weather-based
-  backgrounds and both themes, was checked for WCAG AA contrast.
-* `prefers-reduced-motion` is respected by shortening animations.
-
----
-
-### 10. Progressive Web App
-
-The app now ships with:
-
-* A `manifest.webmanifest` (installable, with regular and maskable
-  icons) so it can be added to the home screen or app dock.
-* An install button that appears when the browser's
-  `beforeinstallprompt` fires.
-* A service worker (`sw.js`) that pre-caches the app shell (HTML, CSS,
-  JS, icons) so the interface still loads offline.
-* Cached weather: the most recently loaded weather is saved to
-  `localStorage`. If a later request fails while offline, the app
-  shows that saved weather with a banner noting when it was saved,
-  instead of just showing an error.
-
-
-
-## What I Learned
-
-Building this project helped reinforce several important frontend development concepts.
-
-### Working with External APIs
-
-I learned how to communicate with third-party APIs and process the data returned by them.
-
-### Asynchronous JavaScript
-
-I practiced using `async/await` and promises to handle operations that don't complete immediately.
-
-### JSON Data
-
-I learned how to navigate and use structured JSON responses.
-
-### DOM Manipulation
-
-I practiced updating existing elements and dynamically creating forecast cards.
-
-### Error Handling
-
-I learned how to make an application handle invalid searches and failed network requests gracefully.
-
-### Browser Storage
-
-I practiced using LocalStorage to persist information between browser sessions.
-
-### Responsive Design
-
-I learned how to create an interface that adapts to desktop, tablet, and mobile screens.
-
----
-
-## Portfolio Value
-
-**Portfolio Rating: ⭐⭐⭐⭐⭐**
-
-This project demonstrates that I can build more than static webpages.
-
-It demonstrates practical knowledge of:
-
-```text
-HTML
-CSS
-JavaScript
-       │
-       ├── DOM Manipulation
-       ├── Events
-       ├── Async/Await
-       ├── Fetch API
-       ├── REST APIs
-       ├── JSON
-       ├── Error Handling
-       └── LocalStorage
-```
-
-It also demonstrates the ability to work with a real external data source and turn API data into an interactive user interface.
-
-This makes the project particularly useful as an entry-level frontend portfolio project.
+## Known Limitations
+
+- Weather is shown in Celsius or Fahrenheit only. Wind speed is always km/h, and precipitation is always mm.
+- The search returns the top geocoding match. To pick a different city with the same name, type the country or region after the city name.
+- Geolocation and the install prompt require a secure context (`https://` or `localhost`).
+- The service worker caches shell files only. Weather data is available offline only from the single most recent successful request.
 
 ---
 
 ## Credits
 
-Weather information is provided by **Open-Meteo**.
-
-Open-Meteo provides weather forecast and geocoding APIs used by this application.
-
-* Open-Meteo Weather API
-* Open-Meteo Geocoding API
-
-No API key is required for the implementation used in this project.
+- Weather and geocoding data: **[Open-Meteo](https://open-meteo.com/)** (no API key required)
+- Reverse geocoding: **[BigDataCloud](https://www.bigdatacloud.com/)** (free client-side endpoint)
 
 ---
 
 ## License
 
-This project is available for educational and portfolio purposes.
-
-You are welcome to modify the code and use the project as part of your personal developer portfolio.
+This project is licensed under the [MIT License](LICENSE). You are free to use, copy, modify, merge, publish, distribute, and sell the code, provided the copyright and license notice are included in copies or substantial portions of it.
 
 ---
 
 ## Author
 
-**Mark Jan Bautista**
+**Mark Jan Bautista**, aspiring web developer
 
-Aspiring Web Developer
-
-### Skills Demonstrated
-
-* HTML5
-* CSS3
-* JavaScript
-* REST APIs
-* Fetch API
-* Async/Await
-* JSON
-* DOM Manipulation
-* LocalStorage
-* Responsive Web Design
-
-### GitHub
-
-```text
-https://github.com/bmarkjan-stack
-```
-
-### Project Repository
-
-```text
-https://github.com/bmarkjan-stack/weather-dashboard
-```
+- GitHub: https://github.com/bmarkjan-stack
+- Repository: https://github.com/bmarkjan-stack/p3-weather-dashboard
