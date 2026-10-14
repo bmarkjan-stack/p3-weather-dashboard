@@ -2,12 +2,15 @@
 
 A responsive, installable weather dashboard built with **HTML, CSS, and vanilla JavaScript**. Search any city to see current conditions, the next 24 hours, a temperature chart, and a 5-day forecast. It works without a build step, a backend, or an API key.
 
-![Weather Dashboard showing Bulacan, Philippines: thunderstorm, 31°C, with recent searches and the current-conditions details](images/p3-1.1.png)
+## Live Demo
+
+![Weather Dashboard live demo: searching for cities, switching units and theme, and browsing the hourly forecast and 5-day forecast](live-demo/weather-dashboard-live-demo.gif)
 
 ---
 
 ## Table of Contents
 
+- [Live Demo](#live-demo)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
@@ -66,25 +69,6 @@ A responsive, installable weather dashboard built with **HTML, CSS, and vanilla 
 - The app shell is cached by a service worker, so it still opens without a connection.
 - The last successful weather response is saved. If a later request fails while offline, that saved weather is shown with a banner that says when it was saved.
 - The app can be installed to the home screen or dock where the browser supports it.
-
-### Screenshots
-
-Each city has two screenshots: the top of the page (current conditions) and the lower half (hourly forecast, temperature trend, and 5-day forecast).
-
-**Bulacan, Philippines**, during a thunderstorm at 31°C
-
-![Bulacan, Philippines: current conditions and details](images/p3-1.1.png)
-![Bulacan, Philippines: hourly forecast, temperature trend, and 5-day forecast](images/p3-1.2.png)
-
-**Los Angeles, United States**, clear sky at 14°C
-
-![Los Angeles, United States: current conditions and details](images/p3-2.1.png)
-![Los Angeles, United States: hourly forecast, temperature trend, and 5-day forecast](images/p3-2.2.png)
-
-**Tokyo, Japan**, mainly clear at 23°C
-
-![Tokyo, Japan: current conditions and details](images/p3-3.1.png)
-![Tokyo, Japan: hourly forecast, temperature trend, and 5-day forecast](images/p3-3.2.png)
 
 ---
 
@@ -235,7 +219,7 @@ p3-weather-dashboard/
 ├── sw.js                  Service worker: app-shell cache and offline fallback
 ├── manifest.webmanifest   Name, icons, colors, and display mode for installation
 ├── icons/                 Favicon, Apple touch icon, and 192/512 px regular and maskable icons
-├── images/                Screenshots used in this README
+├── live-demo/             Demo recording used in this README
 └── README.md
 ```
 

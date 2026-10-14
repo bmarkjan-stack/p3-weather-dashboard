@@ -7,5 +7,6 @@
         "labelledby",
         "Meteo",
         "Recents"
-    ]
+    ],
+    "liveServer.settings.port": 5501
 }
